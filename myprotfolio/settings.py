@@ -25,7 +25,7 @@ load_dotenv()  # Loads .env file
 SECRET_KEY = os.environ['SECRET_KEY']  # Will raise error if missing
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 #smpt
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
