@@ -1,0 +1,397 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+{% csrf_token %}
+
+<head>
+
+    <!-- Basic Meta Tags -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- SEO Meta Tags -->
+  <title>Santunu Kaysar Mahin</title>
+  <meta name="description" content="Explore the portfolio of Santunu Kaysar – a passionate back-end developer, problem solver, and full-time learner.">
+  <meta name="keywords" content="Santunu Kaysar, Portfolio, Programmer,Software Engineer,Engineer, Back-End Developer, Problem Solver, Python, Django, Computer Science Student">
+  <meta name="author" content="Santunu Kaysar">
+
+  <!-- Open Graph Meta Tags for Social Sharing -->
+  <meta property="og:title" content="Santunu Kaysar | Programmer & Developer">
+  <meta property="og:description" content="Portfolio of Santunu Kaysar – passionate about development, learning, and solving real-world problems.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/static/images/preview.jpg"> <!-- Optional if you have an image -->
+  
+    <link rel="canonical" href="https://github.com/SantunuMahin">
+    <!-- Local Styles -->
+    <link rel="stylesheet" href="{% static 'interface/style.css' %}">
+    <link rel="icon" href="{% static 'interface/image/me.png' %}" type="image/png" />
+
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Favicon -->
+    {% if about and about.profile_img %}
+    <link rel="shortcut icon" href="{{ about.profile_img.url }}" type="image/x-icon">
+    {% else %}
+    <link rel="icon" href="{% static 'interface/image/me.png' %}" type="image/png" />
+    {% endif %}
+
+    <link rel="icon" href="{% static 'interface/image/me.png' %}" type="image/png" />
+
+    <script type="application/ld+json">
+    {% if about and about.profile_img %}
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Santunu Kaysar",
+        "image": "{{ about.profile_img.url|escapejs }}",
+        "jobTitle": "Back-End Developer",
+        "alumniOf": {
+        "@type": "EducationalOrganization",
+        "name": "DUET"
+        },
+        "worksFor": {
+        "@type": "Organization",
+        "name": "ServerCodeSocity"
+        },
+        "sameAs": [
+        "https://github.com/SantunuMahin",
+        "https://www.linkedin.com/in/santunu-kaysar-mahin/"
+        ]
+    }
+    {% endif %}
+    </script>
+</head>
+
+
+
+<body>
+    {% if about and about.background_img %}
+    <style>
+        header {
+            background-image: url('{{ about.background_img.url }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
+    {% endif %}
+    <header>
+        <div class="container">
+            <div class="circle-container">
+                <div class="circle"></div>
+            </div>
+            {% if about and about.profile_img %}
+            <img src="{{ about.profile_img.url }}" alt="Profile" class="profile-image">
+            {% endif %}
+            <nav>
+                <div class="menu-toggle" id="menu-toggle">&#9776;</div> <!-- hamburger icon -->
+                <ul id="nav-list">
+                    <li><a href="#aboutme">About me</a></li>
+                    <li><a href="#skills">Skills</a></li>
+                    <li><a href="#cp_activity">CP-Activity</a></li>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#hobbies">Hobbies</a></li>
+                    <li><a href="#blog">My Blogs</a></li>
+
+                    <li><a href="#connect">Connect</a></li>
+                </ul>
+            </nav>
+    </header>
+    <main>
+        <section id="aboutme" class="scroll-reveal fade-in">
+            {% if about and about.resume %}
+            <h2>About Me</h2>
+            <p>{{ about.bio | linebreaks }}</p>
+
+            <p>"Interested in my work? Here's, my <a style="color : #00c3ff;" href="{{about.resume.url}}" target="_blank">Resume</a> !"
+            </p>
+            {% endif %}
+        </section>
+
+        <section id="skills">
+            {% if about %}
+            <h2> Skills</h2>
+            <ul>
+                <li> {{about.skills | linebreaks}} </li>
+            </ul>
+            {% endif %}
+        </section>
+
+        <!-- Competitive Programming section-->
+        <section id="cp_activity" class="scroll-reveal fade-in">
+            <h2>Competitive Programming</h2>
+            <div class="project-list">
+                {% for cp in cp_log %}
+                <div class="project">
+                    {% if cp.url %}
+                    <a href="{{ cp.url }}" target="_blank" rel="noopener noreferrer" class="view-details">
+                        <i class="fa-solid fa-up-right-from-square"></i>
+                    </a>
+                    {% endif %}
+
+                    <h3>{{ cp.title|default:"Untitled" }}</h3>
+
+                    <p>{{ cp.details|default:"No details available" | linebreaks }}</p>
+
+                    {% if cp.activity_img %}
+                    <div class="project-details">
+                        <img src="{{ cp.activity_img.url }}" alt="{{ cp.title|default:'CP' }} image">
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="no-projects">No competitive programming logs available yet.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Project section-->
+        <section id="projects" class="scroll-reveal fade-in">
+            <h2>Projects</h2>
+
+            <div class="project-list">
+                {% for project in projects %}
+                <div class="project">
+                    {% if project.url %}
+                    <a href="{{project.url}}" target="_blank" rel="noopener" class="view-details">
+                        <i class="fa-solid fa-up-right-from-square"></i>
+                    </a>
+                    {% endif %}
+
+                    <h3>{{ project.title|default:"undefined project title" }}</h3>
+
+                    <p>{{ project.details | default:"undefind project details" | linebreaks }}</p>
+
+
+                    {% if project.project_img %}
+                    <div class="project-details">
+                        <img src="{{ project.project_img.url }}" alt="image">
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+
+        <!-- Experience section-->
+        <section id="experience" class="scroll-reveal fade-in">
+            <h2>Experience</h2>
+
+            <div class="project-list">
+                {% for experience in experiences %}
+                <div class="project">
+                    <h3>{{ experience.experience_title|default:"undefined experience title" }}</h3>
+                    <p>{{ experience.experience_details | default:"undefind experience details" | linebreaks }}</p>
+
+                    {% if experience.experience_img %}
+                    <div class="project-details">
+                        <img src="{{ experience.experience_img.url }}" alt="image">
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+
+        <!-- Certification section-->
+        <section id="certification" class="scroll-reveal fade-in">
+            <h2>Certifications</h2>
+
+            <div class="project-list">
+                {% for certification in certifications %}
+                <div class="project">
+                    <h3>{{ certification.certificate_title|default:"undefined certification title" }}</h3>
+                    <p>{{ certification.certificate_details | default:"undefind certification details" | linebreaks }}
+                    </p>
+
+                    {% if certification.certificate_img %}
+                    <div class="project-details">
+                        <img src="{{ certification.certificate_img.url }}" alt="image">
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Hobby section -->
+        <section id="hobbies" class="scroll-reveal fade-in">
+            <h2>Hobbies</h2>
+            <p>Here are some of my favorite hobbies that I enjoy in my free time:</p>
+
+            <div class="hobby">
+                <!-- Reading Section -->
+                <h3>Reading</h3>
+                <p>I love to read non-fiction books. Here are some books I recommend:</p>
+                
+                <div class="hobby-images">  <!-- This should be OUTSIDE the loop -->
+                    {% for hobby in hobbies %}
+                    <div class="hobby-image-container">
+                        <h4>{{ hobby.book_name }}</h4>
+                        {% if hobby.book_img %}
+                        <img src="{{ hobby.book_img.url }}" alt="{{ hobby.book_name }}" class="hobby-image">
+                        {% endif %}
+                        <p>by <i>{{ hobby.writer_name }}</i></p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <hr>
+                
+                <!-- Movies Section -->
+                <div class="movies-section">
+                    <h3>Watching Movies</h3>
+                    <p>I enjoy watching movies. I have watched:</p>
+                    <ul class="movie-list">  <!-- Changed to proper ul/li structure -->
+                        {% for hobby in hobbies %}
+                        {% if hobby.movie_name %}
+                        <li> &diams; {{ hobby.movie_name | linebreaks}}</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+
+            <!-- Blog Section -->
+            <section id="blog" class="scroll-reveal fade-in">
+                <div class="blog-container">
+                    <h2 class="section-title">My <span class="highlight">Blog</span></h2>
+                    <p class="section-subtitle">Thoughts, ideas, and stories I'd like to share</p>
+                    
+                    <div class="coming-soon-card">
+                        <div class="writing-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                                <path d="M2 2l7.586 7.586"></path>
+                                <circle cx="11" cy="11" r="2"></circle>
+                            </svg>
+                        </div>
+                        <h3>Coming Soon</h3>
+                        <p>I'm currently working on some interesting articles and tutorials. Stay tuned for updates!</p>
+                        <div class="progress-pulse"></div>
+                    </div>
+                </div>
+            </section>
+
+
+        <!-- connect section-->
+        <section id="connect" class="scroll-reveal fade-in">
+            <h2>Connect with Me</h2>
+        
+            <!-- Feedback messages -->
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li class="alert alert-{{ message.tags }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        
+            <form method="post" action="{% url 'index' %}#connect">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="id_name">Name:</label>
+                    <input type="text" id="id_name" name="name" placeholder="Name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_email">Email:</label>
+                    <input type="email" id="id_email" name="email" placeholder="Email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_comment">Comment:</label>
+                    <textarea id="id_comment" name="comment" placeholder="Message" class="form-control" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn">Submit</button>
+            </form>
+        </section>
+        
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Connect with Me</h3>
+                <div class="social-links">
+                    <a href="https://www.linkedin.com/in/santunu-kaysar-mahin-0b3784347/" aria-label="LinkedIn Profile"
+                        target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-linkedin"></i>
+                        <span class="social-tooltip">LinkedIn</span>
+                    </a>
+                    <a href="https://github.com/SantunuMahin" aria-label="GitHub Profile" target="_blank"
+                        rel="noopener noreferrer">
+                        <i class="fab fa-github"></i>
+                        <span class="social-tooltip">GitHub</span>
+                    </a>
+                    <a href="mailto:shantanumahin@gmail.com" aria-label="Send Email">
+                        <i class="fas fa-envelope"></i>
+                        <span class="social-tooltip">Email</span>
+                    </a>
+                    <a href="tel:+8801888735883" aria-label="Call Phone">
+                        <i class="fas fa-phone"></i>
+                        <span class="social-tooltip">Call</span>
+                    </a>
+                    <a href="{{about.resume.url}}" class="resume-link" download>
+                        <i class="fas fa-file-download"></i>
+                        <span class="social-tooltip">Resume</span>
+                    </a>
+                    
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul class="footer-menu">
+                    <li><a href="#aboutme">About Me</a></li>
+                    <li><a href="#skills">Skills</a></li>
+                    <li><a href="#cp_activity">CP-Activity</a></li>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#experience">Experience</a></li>
+                    <li><a href="#certification">Certification</a></li>
+                    <li><a href="#hobbies">Hobbies</a></li>
+                    <li><a href="#blog">My Blogs</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Contact Info</h3>
+                <div class="contact-info">
+                    <p><i class="fas fa-envelope"></i> shantanumahin@gmail.com</p>
+                    <p><i class="fas fa-phone"></i> +(880) 1888735883</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Feni, Chittagong, Bangladesh</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="copyright">
+            <p>&copy; <span id="current-year">2025</span> Santunu Kaysar. All Rights Reserved.</p>
+            <div class="legal-links">
+                <a href="https://en.wikipedia.org/wiki/Privacy_policy" class="privacy-policy">Privacy Policy</a>
+                <span class="divider">|</span>
+                <a href="https://en.wikipedia.org/wiki/Terms_of_service" class="terms-of-service">Terms of Service</a>
+
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'interface/script.js' %}"></script>
+
+</body>
+
+</html>
