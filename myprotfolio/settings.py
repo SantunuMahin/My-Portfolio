@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -124,11 +125,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = '/static/'  # Added leading slash for consistency
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Changed to avoid conflict with STATICFILES_DIRS
+# settings.py
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',  # Your app-specific static files
+    BASE_DIR / "static",  # This should now exist
 ]
+STATIC_ROOT = BASE_DIR / "staticfiles"  # For production collectstatic
 
 # Media files (user-uploaded content)
 MEDIA_URL = '/media/'  
