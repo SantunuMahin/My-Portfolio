@@ -128,8 +128,8 @@ margin-left: 90%;
     nav ul {
         display: none;
         flex-direction: column;
-        gap: 10px;
-        font-size: 14px;
+        gap: 6px;
+        font-size: 13px;
         margin-left: 80%;
         background-color: #00c3ffb4;
         height: 210px;
