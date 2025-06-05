@@ -126,10 +126,10 @@ margin-left: 90%;
     }
 
     nav ul {
-        display: none;
+    display: none;
         flex-direction: column;
-        gap: 10px;
-        font-size: 14px;
+        gap: 7px;
+        font-size: 12px;
         margin-left: 80%;
         background-color: #00c3ffb4;
         height: 210px;
