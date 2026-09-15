@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+{% if q %}Search Results for "{{ q }}" — {{ block.super }}
+{% else %}Error {{ status_code }}: {{ status_title }} — {{ block.super }}
+{% endif %}
+{% endblock %}
+
+{% block meta %}
+<meta name="robots" content="noindex, follow">
+{% if q %}
+<meta name="description"
+  content="Search results for &quot;{{ q }}&quot; across blog posts, projects, book notes, and pins.">
+{% else %}
+<meta name="description" content="{{ status_message|default:status_title|truncatechars:160 }}">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="httpstatus-main" id="httpstatusMain">
+
+  {% if q %}
+  <!-- ===== SEARCH RESULTS VIEW ===== -->
+  <section class="search-layout" id="searchLayout">
+    
+    <!-- Refine search form -->
+    <div class="hs-search-box" id="searchResultsSearchBox">
+      <form method="GET" action="{% url 'portfolio:search' %}" class="search-form" role="search" aria-label="Refine search">
+        <label class="visually-hidden" for="searchResultQuery">Refine your search</label>
+        <input type="search" name="q" id="searchResultQuery" placeholder="Search blog, books, projects…" value="{{ q }}" minlength="1" maxlength="200" required>
+        <button type="submit" aria-label="Submit search">
+          <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </form>
+    </div>
+
+    {% if total_results > 0 %}
+    <p class="search-results-count" id="searchResultsCount" role="status">
+      <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+      <strong>{{ total_results }}</strong> result{{ total_results|pluralize }} found for "{{ q }}"
+    </p>
+
+    <div class="search-results-section" id="searchResultsSection">
+
+      {% if results.projects %}
+      <section class="search-group" id="groupProjects" aria-labelledby="groupProjectsTitle">
+        <h2 class="search-group-title" id="groupProjectsTitle">
+          <span class="sgt-icon-wrap"><ion-icon name="code-slash-outline" aria-hidden="true"></ion-icon></span>
+          Projects
+          <span class="sgt-count">{{ results.projects|length }}</span>
+        </h2>
+        <ul class="search-list">
+          {% for project in results.projects %}
+          <li class="search-item" id="projectItem_{{ forloop.counter }}" style="--i:{{ forloop.counter }}">
+            <h3 class="search-item-title">
+              <a href="/#projects">{{ project.title }}</a>
+            </h3>
+            <div class="search-item-meta">
+              <span class="search-tech-badge">{{ project.get_category_display }}</span>
+              {% if project.tech_stack %}
+              <span><ion-icon name="build-outline" aria-hidden="true"></ion-icon> {{ project.tech_stack }}</span>
+              {% endif %}
+            </div>
+            <p class="search-item-snippet">{{ project.description|truncatewords:25 }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if results.blog_posts %}
+      <section class="search-group" id="groupBlog" aria-labelledby="groupBlogTitle">
+        <h2 class="search-group-title" id="groupBlogTitle">
+          <span class="sgt-icon-wrap"><ion-icon name="newspaper-outline" aria-hidden="true"></ion-icon></span>
+          Blog Posts
+          <span class="sgt-count">{{ results.blog_posts|length }}</span>
+        </h2>
+        <ul class="search-list">
+          {% for post in results.blog_posts %}
+          <li class="search-item" id="blogItem_{{ forloop.counter }}" style="--i:{{ forloop.counter }}">
+            <h3 class="search-item-title">
+              <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+            </h3>
+            <div class="search-item-meta">
+              {% if post.category %}
+              <span><ion-icon name="folder-outline" aria-hidden="true"></ion-icon> {{ post.category.name }}</span>
+              {% endif %}
+              <time datetime="{{ post.created_at|date:'Y-m-d' }}">
+                <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon> {{ post.created_at|date:"F j, Y" }}
+              </time>
+            </div>
+            <p class="search-item-snippet">{{ post.excerpt|default:post.content|truncatewords:25 }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if results.books %}
+      <section class="search-group" id="groupBooks" aria-labelledby="groupBooksTitle">
+        <h2 class="search-group-title" id="groupBooksTitle">
+          <span class="sgt-icon-wrap"><ion-icon name="book-outline" aria-hidden="true"></ion-icon></span>
+          Books
+          <span class="sgt-count">{{ results.books|length }}</span>
+        </h2>
+        <ul class="search-list">
+          {% for book in results.books %}
+          <li class="search-item" id="bookItem_{{ forloop.counter }}" style="--i: {{ forloop.counter }};">
+            <h3 class="search-item-title">
+              <a href="{{ book.get_absolute_url }}">{{ book.title }}</a>
+            </h3>
+            <div class="search-item-meta">
+              <span><ion-icon name="person-outline" aria-hidden="true"></ion-icon> {{ book.author }}</span>
+              <span class="star-rating" aria-label="Rating {{ book.rating }} out of 5">
+                {% for i in "12345"|make_list %}
+                <ion-icon name="{% if forloop.counter <= book.rating %}star{% else %}star-outline{% endif %}" aria-hidden="true"></ion-icon>
+                {% endfor %}
+              </span>
+            </div>
+            <p class="search-item-snippet">{{ book.key_takeaway|default:book.reflection|truncatewords:25 }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if results.pin_boards %}
+      <section class="search-group" id="groupPinBoards" aria-labelledby="groupPinBoardsTitle">
+        <h2 class="search-group-title" id="groupPinBoardsTitle">
+          <span class="sgt-icon-wrap"><ion-icon name="folder-open-outline" aria-hidden="true"></ion-icon></span>
+          Pinterest Boards
+          <span class="sgt-count">{{ results.pin_boards|length }}</span>
+        </h2>
+        <ul class="search-list">
+          {% for board in results.pin_boards %}
+          <li class="search-item" id="boardItem_{{ forloop.counter }}" style="--i:{{ forloop.counter }}">
+            <h3 class="search-item-title">
+              <a href="{{ board.get_absolute_url }}">{{ board.name }}</a>
+            </h3>
+            <div class="search-item-meta">
+              <span><ion-icon name="image-outline" aria-hidden="true"></ion-icon> {{ board.pin_count }} pin{{ board.pin_count|pluralize }}</span>
+            </div>
+            <p class="search-item-snippet">{{ board.description|truncatewords:25 }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if results.pins %}
+      <section class="search-group" id="groupPins" aria-labelledby="groupPinsTitle">
+        <h2 class="search-group-title" id="groupPinsTitle">
+          <span class="sgt-icon-wrap"><ion-icon name="logo-pinterest" aria-hidden="true"></ion-icon></span>
+          Pinterest Pins
+          <span class="sgt-count">{{ results.pins|length }}</span>
+        </h2>
+        <ul class="search-list">
+          {% for pin in results.pins %}
+          <li class="search-item" id="pinItem_{{ forloop.counter }}" style="--i:{{ forloop.counter }}">
+            <h3 class="search-item-title">
+              <a href="{{ pin.get_absolute_url }}">{{ pin.title|default:"Untitled Pin" }}</a>
+            </h3>
+            <div class="search-item-meta">
+              {% if pin.board %}
+              <span><ion-icon name="folder-outline" aria-hidden="true"></ion-icon> {{ pin.board.name }}</span>
+              {% endif %}
+            </div>
+            <p class="search-item-snippet">{{ pin.description|truncatewords:25 }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if results.skills %}
+      <section class="search-group" id="groupSkills" aria-labelledby="groupSkillsTitle">
+        <h2 class="search-group-title" id="groupSkillsTitle">
+          <span class="sgt-icon-wrap"><ion-icon name="bulb-outline" aria-hidden="true"></ion-icon></span>
+          Skills &amp; Technologies
+          <span class="sgt-count">{{ results.skills|length }}</span>
+        </h2>
+        <ul class="search-list">
+          {% for skill in results.skills %}
+          <li class="search-item" id="skillItem_{{ forloop.counter }}" style="--i:{{ forloop.counter }}">
+            <h3 class="search-item-title">
+              <a href="/#resume">{{ skill.name }}</a>
+            </h3>
+            <div class="search-item-meta">
+              <span class="search-tech-badge">{{ skill.category.name }}</span>
+              <span><ion-icon name="speedometer-outline" aria-hidden="true"></ion-icon> Proficiency: {{ skill.level }}%</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if results.certificates %}
+      <section class="search-group" id="groupCertificates" aria-labelledby="groupCertificatesTitle">
+        <h2 class="search-group-title" id="groupCertificatesTitle">
+          <span class="sgt-icon-wrap"><ion-icon name="ribbon-outline" aria-hidden="true"></ion-icon></span>
+          Certifications &amp; Credentials
+          <span class="sgt-count">{{ results.certificates|length }}</span>
+        </h2>
+        <ul class="search-list">
+          {% for cert in results.certificates %}
+          <li class="search-item" id="certItem_{{ forloop.counter }}" style="--i:{{ forloop.counter }}">
+            <h3 class="search-item-title">
+              {% if cert.url %}
+              <a href="{{ cert.url }}" target="_blank" rel="noopener noreferrer">{{ cert.title }} <ion-icon name="open-outline"></ion-icon></a>
+              {% else %}
+              <a href="/#resume">{{ cert.title }}</a>
+              {% endif %}
+            </h3>
+            <div class="search-item-meta">
+              <span><ion-icon name="business-outline" aria-hidden="true"></ion-icon> {{ cert.issuer }}</span>
+              <span><ion-icon name="calendar-outline" aria-hidden="true"></ion-icon> {{ cert.date }}</span>
+            </div>
+            {% if cert.description %}
+            <p class="search-item-snippet">{{ cert.description|truncatewords:25 }}</p>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+    </div>
+
+    {% else %}
+    <!-- No Results State -->
+    <div class="search-empty-state" id="searchEmptyState" role="status">
+      <div class="ses-icon-ring">
+        <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+      </div>
+      <h2>No Results Found</h2>
+      <p>Nothing matched &ldquo;<strong>{{ q }}</strong>&rdquo;. Try searching for something else or explore the navigation links below.</p>
+    </div>
+    {% endif %}
+
+  </section>
+  {% else %}
+  
+  <!-- ===== HTTP ERROR VIEW ===== -->
+  <section class="hs-error-card" id="httpStatusContainer" aria-labelledby="errTitle">
+
+    <!-- Lottie animation -->
+    <div class="hs-lottie" id="httpStatusLottie" aria-hidden="true">
+      <dotlottie-player src="https://lottie.host/dcba3da0-dd49-44d2-86b8-25c9bcc25426/97FYr2EbCw.lottie"
+        background="transparent" speed="1" loop autoplay>
+      </dotlottie-player>
+    </div>
+
+    <h2 class="hs-err-title" id="errTitle">{{ status_title }}</h2>
+    <p class="hs-err-msg" id="errDesc">{{ status_message|default:"Something went wrong. Please try again or explore the links below." }}</p>
+
+    <!-- Search box -->
+    <div class="hs-search-box hs-search-box--centered" id="errSearchBox">
+      <form method="GET" action="{% url 'portfolio:search' %}" class="search-form" role="search" aria-label="Site search">
+        <label class="visually-hidden" for="errSearchInput">Search site</label>
+        <input type="search" name="q" id="errSearchInput" placeholder="Search blog, books, projects…" minlength="1" maxlength="200" required autofocus>
+        <button type="submit" aria-label="Submit search">
+          <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </form>
+    </div>
+
+    <!-- Did you mean? -->
+    {% if suggestions %}
+    <nav class="hs-suggestions" id="didYouMeanSection" aria-labelledby="didYouMeanTitle">
+      <h3 class="hs-suggestions-title" id="didYouMeanTitle">
+        <ion-icon name="bulb-outline" aria-hidden="true"></ion-icon> Did you mean?
+      </h3>
+      <ul class="hs-suggestions-list" id="suggestionsList">
+        {% for sug in suggestions %}
+        <li>
+          <a href="{{ sug.url }}" class="hs-sug-chip" id="sug_{{ forloop.counter }}">
+            <ion-icon name="{{ sug.icon|default:'link-outline' }}" aria-hidden="true"></ion-icon>
+            {{ sug.label }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </nav>
+    {% endif %}
+
+  </section>
+  {% endif %}
+
+  <!-- ===== QUICK NAV LINKS ===== -->
+  <nav class="hs-quick-links" id="quickLinksSection" aria-labelledby="quickLinksTitle">
+    <h2 class="hs-quick-links-title" id="quickLinksTitle">Explore the site</h2>
+    <div class="hs-quick-links-list" id="quickLinksList">
+      <a href="/" class="hs-quick-link-btn" id="qHome">
+        <ion-icon name="home-outline" aria-hidden="true"></ion-icon> Home
+      </a>
+      <a href="/#projects" class="hs-quick-link-btn" id="qProjects">
+        <ion-icon name="code-slash-outline" aria-hidden="true"></ion-icon> Projects
+      </a>
+      <a href="{% url 'blog:list' %}" class="hs-quick-link-btn" id="qBlog">
+        <ion-icon name="newspaper-outline" aria-hidden="true"></ion-icon> Blog
+      </a>
+      <a href="{% url 'books:list' %}" class="hs-quick-link-btn" id="qBooks">
+        <ion-icon name="book-outline" aria-hidden="true"></ion-icon> Books
+      </a>
+      <a href="{% url 'time_tracker:board' %}" class="hs-quick-link-btn" id="qPlanner">
+        <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon> Planner
+      </a>
+      <a href="{% url 'pin_interast:board_list' %}" class="hs-quick-link-btn" id="qPins">
+        <ion-icon name="logo-pinterest" aria-hidden="true"></ion-icon> Pins
+      </a>
+    </div>
+  </nav>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}All Pins — Pin Interast{% endblock %}
+{% block meta_desc %}Explore all pinned images across every board.{% endblock %}
+
+{% block content %}
+<div class="pin-main">
+
+  <!-- ===== HEADER ===== -->
+  <div class="pin-all-header">
+    <div class="pin-breadcrumb">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <a href="{% url 'pin_interast:board_list' %}">Pin Interast</a>
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <span>All Pins</span>
+    </div>
+    <h1 class="pin-all-title">All Pins</h1>
+    <p class="pin-all-sub">{{ page_obj.paginator.count }} pin{{ page_obj.paginator.count|pluralize }} across all boards</p>
+  </div>
+
+  <!-- ===== BOARD NAV ===== -->
+  <div class="pin-board-nav">
+    <a href="{% url 'pin_interast:board_list' %}" class="pin-board-nav-btn" id="nav-boards-btn">
+      <ion-icon name="grid-outline"></ion-icon> Boards
+    </a>
+    {% for board in boards %}
+    <a href="{{ board.get_absolute_url }}" class="pin-board-nav-btn" id="nav-board-{{ board.slug }}">
+      {{ board.name }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- ===== TAG FILTER ===== -->
+  {% if all_tags %}
+  <div class="pin-tag-filter-bar" id="tag-filter-bar-all">
+    <a href="{% url 'pin_interast:all_pins' %}"
+       class="pin-tag-chip {% if not selected_tag %}active{% endif %}"
+       id="all-pins-tag-all">All</a>
+    {% for tag in all_tags %}
+    <a href="?tag={{ tag }}"
+       class="pin-tag-chip {% if selected_tag == tag %}active{% endif %}"
+       id="all-pins-tag-{{ forloop.counter }}">{{ tag }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ===== MASONRY GRID ===== -->
+  {% if page_obj.object_list %}
+  <div class="pin-masonry" id="all-pins-masonry">
+    {% for pin in page_obj %}
+    {% if pin.pin_image_url %}
+    <div class="pin-card" id="all-pin-card-{{ pin.pk }}">
+      <a href="{{ pin.get_absolute_url }}">
+        <figure class="pin-card-img-wrap">
+          <img src="{{ pin.pin_image_url }}" alt="{{ pin.title }}" loading="lazy">
+          <div class="pin-card-overlay">
+            <span class="pin-card-title-hover">{{ pin.title }}</span>
+            {% if pin.board %}
+            <span class="pin-card-board-hover">
+              <ion-icon name="folder-outline"></ion-icon> {{ pin.board.name }}
+            </span>
+            {% endif %}
+          </div>
+        </figure>
+      </a>
+      <div class="pin-card-footer">
+        <span class="pin-card-footer-title">{{ pin.title|truncatechars:40 }}</span>
+        {% if pin.board %}
+        <a href="{{ pin.board.get_absolute_url }}" class="pin-card-footer-board">
+          {{ pin.board.name }}
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <nav class="pin-pagination" aria-label="Pagination">
+    {% if page_obj.has_previous %}
+    <a href="?{% if selected_tag %}tag={{ selected_tag }}&{% endif %}page={{ page_obj.previous_page_number }}"
+       class="pin-page-btn" id="all-prev-btn">
+      <ion-icon name="chevron-back-outline"></ion-icon>
+    </a>
+    {% endif %}
+    <span class="pin-page-info">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+    <a href="?{% if selected_tag %}tag={{ selected_tag }}&{% endif %}page={{ page_obj.next_page_number }}"
+       class="pin-page-btn" id="all-next-btn">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+    </a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="pin-empty-state">
+    <ion-icon name="images-outline"></ion-icon>
+    <p>
+      {% if selected_tag %}
+        No pins tagged "{{ selected_tag }}".
+        <a href="{% url 'pin_interast:all_pins' %}">Clear filter</a>
+      {% else %}
+        No pins yet. Add some from the <a href="/admin/">admin panel</a>.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

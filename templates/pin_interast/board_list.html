@@ -1,0 +1,530 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta_desc %}A curated collection of visual inspiration boards — browse by category or explore all pins.
+{% endblock %}
+
+{% block content %}
+<div class="pin-main">
+
+  <!-- ===== HERO HEADER ===== -->
+  <div class="pin-hero">
+    <div class="pin-hero-inner">
+      <div class="pin-hero-badge">
+        <ion-icon name="images-outline"></ion-icon>
+        <span>Visual Board</span>
+      </div>
+      <h1 class="pin-hero-title">Pin Interast</h1>
+      <p class="pin-hero-sub">
+        A curated collection of visual inspiration &mdash; design, art, UI, and beyond.
+      </p>
+      <div class="pin-hero-stats">
+        <div class="pin-stat">
+          <span>{{ boards.count }}</span>
+          <small>Boards</small>
+        </div>
+        <div class="pin-stat">
+          <span>{{ total_pins }}</span>
+          <small>Pins</small>
+        </div>
+      </div>
+      <div class="pin-hero-actions">
+        <a href="{% url 'pin_interast:all_pins' %}" class="pin-btn-primary" id="view-all-pins-btn">
+          <ion-icon name="grid-outline"></ion-icon> Explore All
+        </a>
+        <a href="{% url 'pin_interast:import' %}" class="pin-btn-secondary" id="pinterest-import-btn">
+          <ion-icon name="logo-pinterest"></ion-icon> Import from Pinterest
+        </a>
+      </div>
+    </div>
+
+    <!-- Decorative floating pins preview -->
+    <div class="pin-hero-mosaic" aria-hidden="true">
+      {% for pin in recent_pins %}
+      {% if pin.pin_image_url %}
+      <div class="mosaic-item mosaic-item-{{ forloop.counter }}">
+        <img src="{{ pin.pin_image_url }}" alt="" loading="lazy">
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ===== INSPIRATION MUSIC & SOUNDSCAPES ===== -->
+  <section class="pin-music-section reveal-on-scroll" id="pin-music-lounge">
+    <div class="pin-section-header music-section-top">
+      <div>
+        <div class="music-section-badge">
+          <ion-icon name="headset-outline"></ion-icon>
+          <span>Audio Lounge</span>
+        </div>
+        <h2 class="pin-section-title">Inspiration Beats &amp; Audio</h2>
+        <p class="pin-music-subtitle">Stream audio tracks while exploring pins &amp; curate your favorite playlist.</p>
+      </div>
+
+      <div class="music-header-actions">
+        <div class="music-filter-tabs">
+          <button class="music-tab-btn active" id="tabAllTracks" data-filter="all">
+            All Tracks <span class="tab-count" id="countAllTracks">{{ audio_tracks.count }}</span>
+          </button>
+          <button class="music-tab-btn" id="tabFavTracks" data-filter="favorites">
+            <ion-icon name="heart" class="fav-tab-icon"></ion-icon> Favorites <span class="tab-count"
+              id="countFavTracks">{{ favorite_tracks_count }}</span>
+          </button>
+        </div>
+        {% if is_admin %}
+        <button class="add-music-btn admin-btn" id="openAddMusicBtn" title="Add Track to Collection (Admin)">
+          <ion-icon name="add-circle-outline"></ion-icon> Add Music
+          <span class="admin-badge">Admin</span>
+        </button>
+        {% else %}
+        <button class="add-music-btn lock-btn" id="openAddMusicBtn" title="Admin authorization required to add music">
+          <ion-icon name="lock-closed-outline"></ion-icon> Add Music
+          <span class="lock-badge">Admin Only</span>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- MAIN NEUMORPHIC AUDIO PLAYER -->
+    <div class="neu-player-container">
+      <div class="neu-player-card">
+
+        <!-- Left: Spinning Vinyl / Album Turntable -->
+        <div class="player-turntable-col">
+          <div class="vinyl-disk-wrapper" id="vinylDiskWrapper">
+            <div class="vinyl-grooves"></div>
+            <div class="vinyl-center-label">
+              <img id="playerCoverImg"
+                src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80"
+                alt="Current Track Art">
+              <div class="vinyl-spindle"></div>
+            </div>
+          </div>
+          <div class="turntable-tonearm" id="turntableTonearm"></div>
+        </div>
+
+        <!-- Right: Player Controls & Info -->
+        <div class="player-controls-col">
+
+          <div class="player-track-header">
+            <div class="track-status-row">
+              <span class="now-playing-pill" id="nowPlayingPill">
+                <span class="live-eq" id="liveEqBars">
+                  <span class="eq-bar bar-1"></span>
+                  <span class="eq-bar bar-2"></span>
+                  <span class="eq-bar bar-3"></span>
+                  <span class="eq-bar bar-4"></span>
+                </span>
+                <span id="playerStatusText">Ready to Play</span>
+              </span>
+              <span class="track-genre-pill" id="playerGenre">Lo-Fi / Ambient</span>
+            </div>
+
+            <h3 class="player-track-title" id="playerTitle">Select a track</h3>
+            <p class="player-track-artist" id="playerArtist">Santunu Kaysar</p>
+          </div>
+
+          <!-- Sunken Scrubber Progress Well -->
+          <div class="player-scrubber-wrap">
+            <div class="scrubber-timeline">
+              <span class="time-readout" id="playerCurrentTime">00:00</span>
+              <div class="sunken-progress-track" id="progressTrack" role="slider" aria-label="Audio progress">
+                <div class="progress-bar-fill" id="progressBarFill"></div>
+                <div class="progress-scrubber-handle" id="progressHandle"></div>
+              </div>
+              <span class="time-readout" id="playerTotalDuration">00:00</span>
+            </div>
+          </div>
+
+          <!-- Tactile Control Buttons -->
+          <div class="player-buttons-row">
+            <button class="player-mini-btn" id="btnShuffle" title="Shuffle" aria-label="Shuffle">
+              <ion-icon name="shuffle-outline"></ion-icon>
+            </button>
+            <button class="player-action-btn" id="btnPrev" title="Previous Track" aria-label="Previous">
+              <ion-icon name="play-skip-back-outline"></ion-icon>
+            </button>
+            <button class="player-play-btn" id="btnPlayPause" title="Play / Pause" aria-label="Play or Pause">
+              <ion-icon name="play" id="playPauseIcon"></ion-icon>
+            </button>
+            <button class="player-action-btn" id="btnNext" title="Next Track" aria-label="Next">
+              <ion-icon name="play-skip-forward-outline"></ion-icon>
+            </button>
+            <button class="player-mini-btn" id="btnRepeat" title="Repeat" aria-label="Repeat">
+              <ion-icon name="repeat-outline"></ion-icon>
+            </button>
+            <button class="player-fav-btn" id="btnPlayerFav" title="Favorite this track" aria-label="Favorite">
+              <ion-icon name="heart-outline" id="playerFavIcon"></ion-icon>
+            </button>
+
+            <!-- Volume Control -->
+            <div class="volume-slider-box">
+              <button class="volume-btn" id="btnMute" title="Mute / Unmute" aria-label="Mute">
+                <ion-icon name="volume-medium-outline" id="volumeIcon"></ion-icon>
+              </button>
+              <div class="sunken-vol-track" id="volTrack">
+                <div class="vol-bar-fill" id="volBarFill" style="width: 80%;"></div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end .player-controls-col -->
+
+      </div><!-- end .neu-player-card -->
+
+      <!-- PLAYLIST / FAVORITES TRAY -->
+      <div class="neu-playlist-tray">
+        <div class="playlist-tray-header">
+          <h4 class="tray-title"><ion-icon name="list-outline"></ion-icon> Playlist Tracks</h4>
+          <span class="tray-count" id="playlistCounter">{{ audio_tracks.count }} Track{{ audio_tracks.count|pluralize }}</span>
+        </div>
+
+        <ul class="playlist-items-list" id="playlistItemsList">
+          {% for track in audio_tracks %}
+          <li class="playlist-item {% if forloop.first %}active{% endif %}" data-track-id="{{ track.id }}"
+            data-is-fav="{{ track.is_favorite|yesno:'true,false' }}">
+            <div class="item-play-col">
+              <button class="item-play-btn" data-action="play" data-index="{{ forloop.counter0 }}"
+                aria-label="Play track">
+                <ion-icon name="play-outline" class="item-icon-idle"></ion-icon>
+                <div class="item-icon-playing" style="display:none;">
+                  <span class="mini-eq-bar bar-1"></span>
+                  <span class="mini-eq-bar bar-2"></span>
+                  <span class="mini-eq-bar bar-3"></span>
+                </div>
+              </button>
+            </div>
+            <figure class="item-cover-thumb">
+              <img src="{{ track.cover_art_url }}" alt="{{ track.title }}" loading="lazy">
+            </figure>
+            <div class="item-info-col">
+              <h5 class="item-title">{{ track.title }}</h5>
+              <p class="item-artist">{{ track.artist }} &bull; <span class="item-genre">{{ track.genre }}</span></p>
+            </div>
+            <div class="item-meta-col">
+              <span class="item-duration">{{ track.duration|default:"3:20" }}</span>
+              <button class="item-fav-btn {% if track.is_favorite %}favorited{% endif %}" data-action="fav"
+                data-id="{{ track.id }}" title="Toggle Favorite" aria-label="Favorite">
+                <ion-icon name="{% if track.is_favorite %}heart{% else %}heart-outline{% endif %}"></ion-icon>
+              </button>
+              {% if is_admin %}
+              <button class="item-del-btn" data-action="del" data-id="{{ track.id }}" title="Delete Track"
+                aria-label="Delete">
+                <ion-icon name="trash-outline"></ion-icon>
+              </button>
+              {% endif %}
+            </div>
+          </li>
+          {% empty %}
+          <li class="playlist-empty-state">
+            <ion-icon name="musical-notes-outline"></ion-icon>
+            <p>No audio tracks yet. Click "Add Music" to add songs!</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    </div><!-- end .neu-player-container -->
+  </section>
+
+  <!-- ===== BOARDS GRID ===== -->
+  <section class="pin-boards-section">
+    <div class="pin-section-header">
+      <h2 class="pin-section-title">Browse Boards</h2>
+      <a href="{% url 'pin_interast:all_pins' %}" class="pin-see-all">
+        See all pins <ion-icon name="arrow-forward-outline"></ion-icon>
+      </a>
+    </div>
+
+    {% if boards %}
+    <ul class="pin-boards-grid" id="boards-grid">
+      {% for board in boards %}
+      <li class="pin-board-card reveal-on-scroll" id="board-card-{{ board.slug }}"
+        style="transition-delay: {{ forloop.counter0 }}00ms;">
+        <a href="{{ board.get_absolute_url }}" class="pin-board-link">
+          <figure class="pin-board-cover pin-card">
+            {% if board.cover_image_url %}
+            <img src="{{ board.cover_image_url }}" alt="{{ board.name }}" loading="lazy">
+            {% else %}
+            <div class="pin-board-cover-placeholder">
+              <ion-icon name="images-outline"></ion-icon>
+            </div>
+            {% endif %}
+            <div class="pin-card-overlay pin-board-overlay">
+              <span class="pin-card-title">{{ board.name }}</span>
+              <ion-icon name="arrow-forward-circle-outline"></ion-icon>
+            </div>
+          </figure>
+
+          <div class="pin-board-info">
+            <h3 class="pin-board-name">{{ board.name }}</h3>
+            {% if board.description %}
+            <p class="pin-board-desc">{{ board.description|truncatewords:12 }}</p>
+            {% endif %}
+            <div class="pin-board-meta">
+              <span class="pin-count-badge">
+                <ion-icon name="image-outline"></ion-icon>
+                {{ board.pin_count }} pin{{ board.pin_count|pluralize }}
+              </span>
+              {% if board.pinterest_username %}
+              <span class="pin-owner-badge"
+                title="Imported from Pinterest account of {{ board.pinterest_owner_name|default:board.pinterest_username }}">
+                <ion-icon name="logo-pinterest"></ion-icon>
+                @{{ board.pinterest_username }}
+              </span>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="no-content">
+      <ion-icon name="images-outline" class="no-content-icon"></ion-icon>
+      <p>No boards yet. Add some from the <a href="/admin/" style="color: var(--accent);">admin panel</a>.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- ===== RECENT PINS PREVIEW ===== -->
+  {% if recent_pins %}
+  <section class="pin-recent-section">
+    <div class="pin-section-header">
+      <h2 class="pin-section-title">Recently Pinned</h2>
+      <a href="{% url 'pin_interast:all_pins' %}" class="pin-see-all">
+        View all <ion-icon name="arrow-forward-outline"></ion-icon>
+      </a>
+    </div>
+    <div class="pin-masonry" id="recent-pins-masonry">
+      {% for pin in recent_pins %}
+      {% if pin.pin_image_url %}
+      <div class="pin-card" id="pin-{{ pin.pk }}">
+        <a href="{{ pin.get_absolute_url }}">
+          <figure class="pin-card-img-wrap">
+            <img src="{{ pin.pin_image_url }}" alt="{{ pin.title }}" loading="lazy">
+            <div class="pin-card-overlay">
+              <span class="pin-card-title">{{ pin.title }}</span>
+              {% if pin.board %}
+              <span class="pin-card-board-hover">
+                <ion-icon name="folder-outline"></ion-icon> {{ pin.board.name }}
+              </span>
+              {% endif %}
+            </div>
+          </figure>
+        </a>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+
+<!-- ===== ADD MUSIC MODAL ===== -->
+<div class="neu-modal" id="addMusicModal" role="dialog" aria-modal="true" aria-labelledby="modalMusicTitle">
+  <div class="neu-modal-card">
+    <div class="neu-modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-icon-badge">
+          <ion-icon name="musical-notes"></ion-icon>
+        </div>
+        <div>
+          <h3 class="neu-modal-title" id="modalMusicTitle">Add Audio Music</h3>
+          <p class="neu-modal-sub">Add streamable audio &amp; custom artwork by URL or file upload</p>
+        </div>
+      </div>
+      <button type="button" class="neu-modal-close" id="closeAddMusicModal" aria-label="Close modal">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <form id="addMusicForm" class="neu-modal-form" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-row-2">
+        <div class="neu-field-group">
+          <label for="trackTitle" class="neu-label">Track Title *</label>
+          <div class="neu-input-well">
+            <ion-icon name="text-outline"></ion-icon>
+            <input type="text" id="trackTitle" name="title" required placeholder="e.g. Midnight Chillwave"
+              class="neu-input">
+          </div>
+        </div>
+        <div class="neu-field-group">
+          <label for="trackArtist" class="neu-label">Artist / Creator *</label>
+          <div class="neu-input-well">
+            <ion-icon name="person-outline"></ion-icon>
+            <input type="text" id="trackArtist" name="artist" required placeholder="e.g. Lofi Dreamer"
+              class="neu-input">
+          </div>
+        </div>
+      </div>
+
+      <!-- Audio Source: URL or File -->
+      <div class="neu-field-group">
+        <label for="audioUrl" class="neu-label">Audio Stream URL (Direct .mp3 / audio stream)</label>
+        <div class="neu-input-well">
+          <ion-icon name="link-outline"></ion-icon>
+          <input type="url" id="audioUrl" name="audio_url" placeholder="https://example.com/stream.mp3"
+            class="neu-input">
+        </div>
+        <small class="field-hint">Or upload a local audio file below:</small>
+      </div>
+
+      <div class="neu-field-group">
+        <label for="audioFile" class="neu-label">Upload Audio File (Optional)</label>
+        <div class="neu-file-well">
+          <input type="file" id="audioFile" name="audio_file" accept="audio/*" class="neu-file-input">
+        </div>
+      </div>
+
+      <!-- Artwork Cover: URL or File -->
+      <div class="neu-field-group">
+        <label for="musicCoverUrl" class="neu-label">Cover Artwork Image URL</label>
+        <div class="neu-input-well">
+          <ion-icon name="image-outline"></ion-icon>
+          <input type="url" id="musicCoverUrl" name="cover_url"
+            placeholder="https://images.unsplash.com/... or direct image link" class="neu-input">
+        </div>
+        <div class="cover-preview-wrapper" id="coverPreviewBox" style="display: none;">
+          <p class="preview-label">Live Artwork Preview:</p>
+          <div class="cover-preview-img-frame">
+            <img id="coverPreviewImg" src="" alt="Live Artwork Preview">
+          </div>
+        </div>
+        <small class="field-hint">Or upload an album art image file:</small>
+      </div>
+
+      <div class="neu-field-group">
+        <label for="coverImage" class="neu-label">Upload Cover Image (Optional)</label>
+        <div class="neu-file-well">
+          <input type="file" id="coverImage" name="cover_image" accept="image/*" class="neu-file-input">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="neu-field-group">
+          <label for="trackGenre" class="neu-label">Genre / Mood</label>
+          <div class="neu-input-well">
+            <ion-icon name="pricetag-outline"></ion-icon>
+            <input type="text" id="trackGenre" name="genre" placeholder="e.g. Lo-Fi, Ambient, Synthwave"
+              class="neu-input">
+          </div>
+        </div>
+        <div class="neu-field-group">
+          <label for="trackDuration" class="neu-label">Duration (approx.)</label>
+          <div class="neu-input-well">
+            <ion-icon name="time-outline"></ion-icon>
+            <input type="text" id="trackDuration" name="duration" placeholder="e.g. 3:45" class="neu-input">
+          </div>
+        </div>
+      </div>
+
+      <!-- Add to Favorites Checkbox -->
+      <div class="neu-checkbox-row">
+        <label class="neu-checkbox-label">
+          <input type="checkbox" name="is_favorite" value="true" class="neu-checkbox" id="addTrackFav">
+          <span class="neu-checkbox-custom"></span>
+          <span class="neu-checkbox-text">
+            <ion-icon name="heart" class="fav-icon-mini"></ion-icon> Add to My Favorite List immediately
+          </span>
+        </label>
+      </div>
+
+      <div class="modal-actions-row">
+        <button type="button" class="neu-btn-secondary"
+          onclick="document.getElementById('addMusicModal').classList.remove('active')">
+          Cancel
+        </button>
+        <button type="submit" class="neu-btn-primary" id="submitAddMusicBtn">
+          <ion-icon name="cloud-upload-outline"></ion-icon> Add Track to Collection
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== ADMIN REQUIRED MODAL ===== -->
+<div class="neu-modal" id="adminRequiredModal" role="dialog" aria-modal="true" aria-labelledby="adminNoticeTitle">
+  <div class="neu-modal-card admin-notice-card">
+    <div class="neu-modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-icon-badge lock-icon-badge">
+          <ion-icon name="shield-checkmark"></ion-icon>
+        </div>
+        <div>
+          <h3 class="neu-modal-title" id="adminNoticeTitle">Admin Permission Required</h3>
+          <p class="neu-modal-sub">Restricted to portfolio administrators</p>
+        </div>
+      </div>
+      <button type="button" class="neu-modal-close" id="closeAdminNoticeBtn" aria-label="Close modal">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="admin-notice-content">
+      <div class="admin-notice-callout">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <p>Only the site administrator can add audio files or upload custom album artwork to this portfolio.</p>
+      </div>
+      <p class="admin-notice-desc">
+        Feel free to listen to all tracks in high-fidelity, seek through audio soundscapes, and click the heart icon on
+        any song to curate your personal <strong>Favorites</strong> list!
+      </p>
+      <p class="admin-notice-subtext">
+        If you are Santunu Kaysar, please sign in with your administrator credentials to unlock track uploads and custom
+        URL artwork addition.
+      </p>
+    </div>
+
+    <div class="modal-actions-row">
+      <button type="button" class="neu-btn-secondary" id="dismissAdminNoticeBtn">
+        Dismiss
+      </button>
+      <a href="/admin/login/?next={{ request.path }}" class="neu-btn-primary admin-login-link">
+        <ion-icon name="log-in-outline"></ion-icon> Log In as Admin
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Global Config for Pin Music Player -->
+<script>
+  window.PIN_MUSIC_CONFIG = {
+    isAdmin: {% if is_admin %}true{% else %}false{% endif %},
+    urls: {
+      list: "{% url 'pin_interast:api_music_tracks' %}",
+      add: "{% url 'pin_interast:api_add_music_track' %}",
+      favoriteTpl: "{% url 'pin_interast:api_toggle_favorite' 0 %}".replace('/0/', '/:id/'),
+      deleteTpl: "{% url 'pin_interast:api_delete_music_track' 0 %}".replace('/0/', '/:id/')
+    }
+  };
+</script>
+<!-- Initial Music JSON Payload for instantaneous zero-latency hydration -->
+<script id="initialMusicJson" type="application/json">{{ audio_tracks_json|safe }}</script>
+<!-- Music Player Controller -->
+<script src="{% static 'js/pin_music.js' %}"></script>
+
+<script>
+  (function () {
+    function init() {
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) entry.target.classList.add('revealed');
+        });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+        observer.observe(el);
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
+{% endblock %}

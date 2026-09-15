@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ book.title }} — Books{% endblock %}
+{% block meta_desc %}{{ book.key_takeaway|default:book.title }}{% endblock %}
+
+{% block content %}
+<div class="blog-main books-main">
+  <div class="blog-detail-header">
+    <div class="blog-detail-header-inner">
+      <a href="{% url 'books:list' %}" class="back-btn">
+        <ion-icon name="arrow-back-outline"></ion-icon> All Books
+      </a>
+    </div>
+  </div>
+
+  <div class="blog-detail-layout book-detail-layout">
+    <article class="blog-post-article book-article">
+      <div class="book-detail-hero">
+        <div class="book-cover-frame">
+          <figure class="book-detail-cover">
+            {% if book.cover_image_url %}
+            <img src="{{ book.cover_image_url }}" alt="{{ book.title }}">
+            {% else %}
+            <div class="book-detail-placeholder">
+              <ion-icon name="book-outline"></ion-icon>
+            </div>
+            {% endif %}
+          </figure>
+          <div class="book-detail-actions">
+            <a href="{% url 'books:list' %}?status={{ book.status }}" class="book-filter-chip">
+              All {{ book.get_status_display|lower }}
+            </a>
+            <a href="{% url 'books:list' %}?q={{ book.author|urlencode }}" class="book-filter-chip">
+              Same author
+            </a>
+          </div>
+        </div>
+
+        <div class="blog-post-header book-post-header">
+          <div class="blog-post-meta">
+            <span class="status-badge status-{{ book.status_class }}">{{ book.get_status_display }}</span>
+            {% if book.read_date %}
+            <time datetime="{{ book.read_date|date:'Y-m-d' }}">
+              <ion-icon name="calendar-outline"></ion-icon> {{ book.read_date|date:"F j, Y" }}
+            </time>
+            {% endif %}
+            {% if reading_time_mins %}
+            <span class="blog-read-time-badge">
+              <ion-icon name="time-outline"></ion-icon> {{ reading_time_mins }} min read
+            </span>
+            {% endif %}
+          </div>
+          <h1 class="blog-post-title">{{ book.title }}</h1>
+          <p class="book-author book-author-large">by {{ book.author }}</p>
+          {% if book.rating %}
+          <div class="book-rating-row">
+            <div class="book-rating" aria-label="{{ book.rating }} out of 5">
+              {% for i in "12345" %}
+                {% if forloop.counter <= book.rating %}
+                  <ion-icon name="star"></ion-icon>
+                {% else %}
+                  <ion-icon name="star-outline"></ion-icon>
+                {% endif %}
+              {% endfor %}
+            </div>
+            <span>{{ book.rating }}/5 personal rating</span>
+          </div>
+          {% endif %}
+          <p class="book-detail-intro">
+            A personal note from my reading shelf: what stayed with me, what I questioned,
+            and the thought I want to carry forward.
+          </p>
+
+          <!-- Quick Share & Copy Link Bar -->
+          <div class="article-share-bar" style="margin-top: 18px;">
+            <span class="share-label">Share note:</span>
+            <button type="button" class="article-share-btn" id="copyBookLinkBtn" title="Copy reflection link" onclick="navigator.clipboard.writeText(window.location.href); this.classList.add('copied'); this.innerHTML='<ion-icon name=\'checkmark-outline\'></ion-icon> Copied!'; setTimeout(() => { this.classList.remove('copied'); this.innerHTML='<ion-icon name=\'link-outline\'></ion-icon> Copy Link'; }, 2500);">
+              <ion-icon name="link-outline"></ion-icon> Copy Link
+            </button>
+            <a href="https://twitter.com/intent/tweet?text={{ book.title|urlencode }}%20by%20{{ book.author|urlencode }}&url={{ request.build_absolute_uri|urlencode }}" target="_blank" rel="noopener noreferrer" class="article-share-btn" title="Share on Twitter / X">
+              <ion-icon name="logo-twitter"></ion-icon> Twitter / X
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}" target="_blank" rel="noopener noreferrer" class="article-share-btn" title="Share on LinkedIn">
+              <ion-icon name="logo-linkedin"></ion-icon> LinkedIn
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {% if book.key_takeaway %}
+      <section class="book-note-block book-takeaway-block reveal-on-scroll">
+        <div class="book-note-label">
+          <ion-icon name="bulb-outline"></ion-icon>
+          <h2>Key Takeaway</h2>
+        </div>
+        <p>{{ book.key_takeaway }}</p>
+      </section>
+      {% endif %}
+
+      {% if book.favorite_quote %}
+      <section class="book-note-block reveal-on-scroll">
+        <div class="book-note-label">
+          <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+          <h2>Line I Kept</h2>
+        </div>
+        <!-- Gorgeous pullquote treatment -->
+        <div class="book-pullquote">
+          <p>{{ book.favorite_quote }}</p>
+          <cite>— {{ book.author }}</cite>
+        </div>
+      </section>
+      {% endif %}
+
+      <section class="blog-post-content book-reflection reveal-on-scroll">
+        <div class="book-note-label">
+          <ion-icon name="create-outline"></ion-icon>
+          <h2>My Thoughts</h2>
+        </div>
+        {{ book.reflection|linebreaks }}
+      </section>
+
+      {% if book.quotes.all %}
+      <section class="book-quotes-section reveal-on-scroll">
+        <div class="book-note-label">
+          <ion-icon name="quote-outline"></ion-icon>
+          <h2>Key Passages &amp; Notes</h2>
+        </div>
+        <div class="book-quotes-container">
+          {% for quote_item in book.quotes.all %}
+          <div class="book-quote-card glass glass-shimmer">
+            <ion-icon name="chatbubble-ellipses-outline" class="quote-card-icon"></ion-icon>
+            <blockquote>{{ quote_item.quote|linebreaks }}</blockquote>
+            
+            {% if quote_item.quote_image_url %}
+            <figure class="book-quote-image">
+              <img src="{{ quote_item.quote_image_url }}" alt="Quote from {{ book.title }}" loading="lazy">
+            </figure>
+            {% endif %}
+
+            {% if quote_item.explanation %}
+            <div class="book-quote-explanation">
+              <div class="explanation-title">
+                <ion-icon name="bulb-outline"></ion-icon>
+                <span>Takeaway</span>
+              </div>
+              <p>{{ quote_item.explanation|linebreaks }}</p>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </article>
+
+    {% if related %}
+    <aside class="blog-related">
+      <h3 class="related-title">More From This Shelf</h3>
+      <ul class="related-list">
+        {% for item in related %}
+        <li class="related-item">
+          <a href="{{ item.get_absolute_url }}" class="related-link">
+            {% if item.cover_image_url %}
+            <figure class="related-thumb">
+              <img src="{{ item.cover_image_url }}" alt="{{ item.title }}" loading="lazy">
+            </figure>
+            {% else %}
+            <div class="related-thumb related-thumb-placeholder">
+              <ion-icon name="book-outline"></ion-icon>
+            </div>
+            {% endif %}
+            <div class="related-info">
+              <h4 class="related-post-title">{{ item.title }}</h4>
+              <span class="related-author">by {{ item.author }}</span>
+            </div>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </aside>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  (function() {
+    function init() {
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) entry.target.classList.add('revealed');
+        });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+        observer.observe(el);
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
+{% endblock %}

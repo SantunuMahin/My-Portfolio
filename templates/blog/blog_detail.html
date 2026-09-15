@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ post.title }} — Blog{% endblock %}
+{% block meta_desc %}{{ post.excerpt|default:post.title }}{% endblock %}
+
+{% block content %}
+<div class="blog-main">
+
+  <div class="blog-detail-header">
+    <div class="blog-detail-header-inner">
+      <a href="{% url 'blog:list' %}" class="back-btn">
+        <ion-icon name="arrow-back-outline"></ion-icon> All Posts
+      </a>
+    </div>
+  </div>
+
+  <div class="blog-detail-layout">
+
+    <article class="blog-post-article">
+
+      {% if post.banner_image_url %}
+      <figure class="blog-detail-banner">
+        <img src="{{ post.banner_image_url }}" alt="{{ post.title }}">
+      </figure>
+      {% endif %}
+
+      <div class="blog-post-header">
+        <div class="blog-post-meta">
+          {% if post.category %}
+          <span class="blog-cat-badge">{{ post.category.name }}</span>
+          {% endif %}
+          <time datetime="{{ post.created_at|date:'Y-m-d' }}">
+            <ion-icon name="calendar-outline"></ion-icon> {{ post.created_at|date:"F j, Y" }}
+          </time>
+          {% if reading_time_mins %}
+          <span class="blog-read-time-badge">
+            <ion-icon name="time-outline"></ion-icon> {{ reading_time_mins }} min read
+          </span>
+          {% endif %}
+        </div>
+        <h1 class="blog-post-title">{{ post.title }}</h1>
+        {% if post.excerpt %}
+        <p class="blog-post-excerpt">{{ post.excerpt }}</p>
+        {% endif %}
+
+        <!-- Quick Share & Copy Link Bar -->
+        <div class="article-share-bar">
+          <span class="share-label">Share article:</span>
+          <button type="button" class="article-share-btn" id="copyArticleLinkBtn" title="Copy article link" onclick="navigator.clipboard.writeText(window.location.href); this.classList.add('copied'); this.innerHTML='<ion-icon name=\'checkmark-outline\'></ion-icon> Copied!'; setTimeout(() => { this.classList.remove('copied'); this.innerHTML='<ion-icon name=\'link-outline\'></ion-icon> Copy Link'; }, 2500);">
+            <ion-icon name="link-outline"></ion-icon> Copy Link
+          </button>
+          <a href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ request.build_absolute_uri|urlencode }}" target="_blank" rel="noopener noreferrer" class="article-share-btn" title="Share on Twitter / X">
+            <ion-icon name="logo-twitter"></ion-icon> X / Twitter
+          </a>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}" target="_blank" rel="noopener noreferrer" class="article-share-btn" title="Share on LinkedIn">
+            <ion-icon name="logo-linkedin"></ion-icon> LinkedIn
+          </a>
+        </div>
+      </div>
+
+      <div class="blog-post-content">
+        {{ post.content|linebreaks }}
+
+        {% if post.sections.all %}
+        <div class="blog-post-sections">
+          {% for section in post.sections.all %}
+          <section class="blog-section-block reveal-on-scroll">
+            {% if section.title %}
+            <h3 class="blog-section-title">{{ section.title }}</h3>
+            {% endif %}
+            
+            {% if section.section_image_url %}
+            <figure class="blog-section-image">
+              <img src="{{ section.section_image_url }}" alt="{{ section.title|default:post.title }}" loading="lazy">
+            </figure>
+            {% endif %}
+            
+            {% if section.content %}
+            <div class="blog-section-content">
+              {{ section.content|linebreaks }}
+            </div>
+            {% endif %}
+          </section>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Article author footer card -->
+        <div class="article-author-card">
+          <figure class="author-avatar-frame">
+            {% if profile and profile.avatar %}
+            <img src="{{ profile.avatar.url }}" alt="{{ profile.name }}">
+            {% else %}
+            <div class="author-avatar-placeholder">
+              <ion-icon name="person-outline"></ion-icon>
+            </div>
+            {% endif %}
+          </figure>
+          <div class="author-info">
+            <h4 class="author-name">Written by {{ profile.name|default:"Santunu Kaysar" }}</h4>
+            <p class="author-role">{{ profile.title|default:"Full Stack Developer" }} &bull; Sharing insights, workflows, and code notes.</p>
+          </div>
+        </div>
+      </div>
+
+    </article>
+
+    {% if related %}
+    <aside class="blog-related">
+      <h3 class="related-title">Related Posts</h3>
+      <ul class="related-list">
+        {% for rel in related %}
+        <li class="related-item">
+          <a href="{{ rel.get_absolute_url }}" class="related-link">
+            {% if rel.banner_image_url %}
+            <figure class="related-thumb">
+              <img src="{{ rel.banner_image_url }}" alt="{{ rel.title }}" loading="lazy">
+            </figure>
+            {% else %}
+            <div class="related-thumb related-thumb-placeholder">
+              <ion-icon name="document-text-outline"></ion-icon>
+            </div>
+            {% endif %}
+            <div class="related-info">
+              <h4 class="related-post-title">{{ rel.title }}</h4>
+              <time>{{ rel.created_at|date:"M j, Y" }}</time>
+            </div>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </aside>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+  (function() {
+    function init() {
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+          }
+        });
+      }, { threshold: 0.15 });
+
+      document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+        observer.observe(el);
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
+{% endblock %}

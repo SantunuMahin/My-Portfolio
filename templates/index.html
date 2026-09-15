@@ -1,0 +1,513 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+    <!-- ===== ABOUT ===== -->
+    <article class="about active" id="about" data-page="about">
+      <header>
+        <h2 class="h2 article-title">About Me</h2>
+      </header>
+
+      <section class="about-text">
+        {% if profile.bio %}
+        {% for para in profile.bio.splitlines %}
+        {% if para %}<p>{{ para }}</p>{% endif %}
+        {% endfor %}
+        {% else %}
+        <p>Welcome to my portfolio. I build elegant, functional web applications.</p>
+        {% endif %}
+      </section>
+
+      <!-- WHAT I DO -->
+      {% if services %}
+      <section class="service reveal-on-scroll">
+        <h3 class="h3 service-title">What I'm doing</h3>
+        <ul class="service-list">
+          {% for s in services %}
+          <li class="service-item reveal-on-scroll reveal-delay-{{ forloop.counter|default:1 }}">
+            <div class="service-icon-box">
+              {% if s.icon %}
+              <img src="{{ s.icon.url }}" alt="{{ s.title }}" width="40">
+              {% else %}
+              <ion-icon name="{{ s.icon_name|default:'code-slash-outline' }}"
+                style="font-size:40px;color:var(--orange-yellow-crayola)"></ion-icon>
+              {% endif %}
+            </div>
+            <div class="service-content-box">
+              <h4 class="h4 service-item-title">{{ s.title }}</h4>
+              <p class="service-item-text">{{ s.description }}</p>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+    </article>
+
+    <!-- ===== RESUME ===== -->
+    <article class="resume" id="resume" data-page="resume">
+      <header>
+        <h2 class="h2 article-title">Resume</h2>
+      </header>
+
+      <!-- EXPERIENCE -->
+      {% if experiences %}
+      <section class="timeline reveal-on-scroll">
+        <div class="title-wrapper">
+          <div class="icon-box"><ion-icon name="briefcase-outline"></ion-icon></div>
+          <h3 class="h3">Experience</h3>
+        </div>
+        <ol class="timeline-list">
+          {% for exp in experiences %}
+          <li class="timeline-item">
+            <h4 class="h4 timeline-item-title">{{ exp.role }}</h4>
+            <span class="timeline-period">{{ exp.get_period }}</span>
+            <div class="timeline-text">
+              {% if exp.company_url %}
+              <a href="{{ exp.company_url }}" target="_blank" class="company-link">{{ exp.company }}</a>
+              {% else %}
+              <strong>{{ exp.company }}</strong>
+              {% endif %}
+              {% if exp.get_bullets %}
+              <ul class="bullet-list">
+                {% for bullet in exp.get_bullets %}
+                <li>{{ bullet }}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ol>
+      </section>
+      {% endif %}
+
+      <!-- EDUCATION -->
+      {% if education %}
+      <section class="timeline reveal-on-scroll">
+        <div class="title-wrapper">
+          <div class="icon-box"><ion-icon name="book-outline"></ion-icon></div>
+          <h3 class="h3">Education</h3>
+        </div>
+        <ol class="timeline-list">
+          {% for edu in education %}
+          <li class="timeline-item">
+            <h4 class="h4 timeline-item-title">
+              {% if edu.institution_url %}
+              <a href="{{ edu.institution_url }}" target="_blank" class="company-link">{{ edu.institution }}</a>
+              {% else %}
+              {{ edu.institution }}
+              {% endif %}
+            </h4>
+            <span class="timeline-period">{{ edu.get_period }}</span>
+            {% if edu.location %}<small class="edu-location">{{ edu.location }}</small>{% endif %}
+            <div class="timeline-text">
+              <p>{{ edu.degree }}{% if edu.field %} — {{ edu.field }}{% endif %}</p>
+              {% if edu.get_bullets %}
+              <ul class="bullet-list">
+                {% for bullet in edu.get_bullets %}
+                <li>{{ bullet }}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ol>
+      </section>
+      {% endif %}
+
+      <!-- SKILLS -->
+      {% if skill_categories %}
+      <section class="skills-section reveal-on-scroll">
+        <div class="title-wrapper">
+          <div class="icon-box"><ion-icon name="bulb-outline"></ion-icon></div>
+          <h3 class="h3">Skills</h3>
+        </div>
+        <div class="skills-grid">
+          {% for cat in skill_categories %}
+          <div class="skill-category-card glass-shimmer">
+            <div class="skill-cat-header">
+              {% if cat.icon %}
+              <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" width="36">
+              {% else %}
+              <ion-icon name="code-slash-outline" style="font-size:28px;color:var(--orange-yellow-crayola)"></ion-icon>
+              {% endif %}
+              <h4 class="h4">{{ cat.name }}</h4>
+            </div>
+            <div class="skill-tags">
+              {% for skill in cat.skills.all %}
+              <span class="skill-tag">{{ skill.name }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- CERTIFICATES -->
+      {% if certificates %}
+      <section class="timeline reveal-on-scroll">
+        <div class="title-wrapper">
+          <div class="icon-box"><ion-icon name="document-text-outline"></ion-icon></div>
+          <h3 class="h3">Certificates</h3>
+        </div>
+        <ol class="timeline-list">
+          {% for cert in certificates %}
+          <li class="timeline-item">
+            <h4 class="h4 timeline-item-title">
+              {% if cert.url %}
+              <a href="{{ cert.url }}" target="_blank" class="company-link">{{ cert.title }}</a>
+              {% else %}
+              {{ cert.title }}
+              {% endif %}
+            </h4>
+            <span class="timeline-period">{{ cert.date }}</span>
+            <div class="timeline-text">
+              <strong>{{ cert.issuer }}</strong>
+              {% if cert.description %}
+              <p>{{ cert.description }}</p>
+              {% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ol>
+      </section>
+      {% endif %}
+
+    </article>
+
+    <!-- ===== PROJECTS ===== -->
+    <article class="projects" id="projects" data-page="projects">
+      <header>
+        <h2 class="h2 article-title">Projects & Work</h2>
+      </header>
+
+      <!-- Filter buttons -->
+      <section class="projects-section">
+        <ul class="filter-list">
+          <li class="filter-item">
+            <button class="filter-btn active" data-filter-btn data-filter="all">All</button>
+          </li>
+          <li class="filter-item">
+            <button class="filter-btn" data-filter-btn data-filter="web">Web Dev</button>
+          </li>
+          <li class="filter-item">
+            <button class="filter-btn" data-filter-btn data-filter="ml">ML / AI</button>
+          </li>
+          <li class="filter-item">
+            <button class="filter-btn" data-filter-btn data-filter="data">Data Science</button>
+          </li>
+          <li class="filter-item">
+            <button class="filter-btn" data-filter-btn data-filter="other">Other</button>
+          </li>
+        </ul>
+
+        <ul class="project-list">
+          {% for project in projects %}
+          <li class="project-item reveal" data-filter-item data-category="{{ project.category }}">
+            <div class="project-card glass-shimmer">
+              {% if project.image %}
+              <figure class="project-img">
+                <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
+                <div class="project-item-icon-box">
+                  <ion-icon name="eye-outline"></ion-icon>
+                </div>
+              </figure>
+              {% else %}
+              <figure class="project-img project-img-placeholder">
+                <ion-icon name="code-slash-outline"></ion-icon>
+                <div class="project-item-icon-box">
+                  <ion-icon name="eye-outline"></ion-icon>
+                </div>
+              </figure>
+              {% endif %}
+
+              <div class="project-info">
+                <h3 class="project-title">{{ project.title }}</h3>
+                <p class="project-category">{{ project.get_category_display }}</p>
+                <p class="project-desc">{{ project.description|truncatewords:20 }}</p>
+                {% if project.get_tech_list %}
+                <div class="project-tech">
+                  {% for tech in project.get_tech_list %}
+                  <span class="tech-badge">{{ tech }}</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+                <div class="project-links">
+                  {% if project.github_url %}
+                  <a href="{{ project.github_url }}" target="_blank" class="project-link-btn" title="GitHub">
+                    <ion-icon name="logo-github"></ion-icon>
+                  </a>
+                  {% endif %}
+                  {% if project.live_url %}
+                  <a href="{{ project.live_url }}" target="_blank" class="project-link-btn" title="Live Demo">
+                    <ion-icon name="open-outline"></ion-icon>
+                  </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </li>
+          {% empty %}
+          <li class="no-content" style="grid-column: 1/-1;">
+            <ion-icon name="code-slash-outline" class="no-content-icon"></ion-icon>
+            <p>Projects coming soon — check back later!</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+    </article>
+
+    <!-- ===== CONTACT ===== -->
+    <article class="contact" id="contact" data-page="contact">
+      <header>
+        <h2 class="h2 article-title">Contact</h2>
+      </header>
+
+      <section class="contact-section">
+        <p class="contact-intro">Have a project in mind or just want to say hello? I'd love to hear from you. Fill out
+          the form and I'll get back to you as soon as possible.</p>
+
+        <div class="contact-layout">
+
+          <!-- LEFT: Contact Info -->
+          <div class="contact-info-col">
+
+            <ul class="contact-links-list">
+              {% if profile.email %}
+              <li class="contact-link-item">
+                <div class="contact-icon-box">
+                  <ion-icon name="mail-outline"></ion-icon>
+                </div>
+                <div>
+                  <p class="contact-label">Email</p>
+                  <a href="mailto:{{ profile.email }}" class="contact-val">{{ profile.email }}</a>
+                </div>
+              </li>
+              {% endif %}
+
+              {% for item in profile.get_social_links %}
+              <li class="contact-link-item">
+                <div class="contact-icon-box">
+                  <ion-icon name="{{ item.icon }}"></ion-icon>
+                </div>
+                <div>
+                  <p class="contact-label">{{ item.label }}</p>
+                  <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="contact-val">{{ item.url }}</a>
+                </div>
+              </li>
+              {% empty %}
+              {% if profile.github_url %}
+              <li class="contact-link-item">
+                <div class="contact-icon-box">
+                  <ion-icon name="logo-github"></ion-icon>
+                </div>
+                <div>
+                  <p class="contact-label">GitHub</p>
+                  <a href="{{ profile.github_url }}" target="_blank" rel="noopener noreferrer" class="contact-val">{{ profile.github_url }}</a>
+                </div>
+              </li>
+              {% endif %}
+              {% if profile.linkedin_url %}
+              <li class="contact-link-item">
+                <div class="contact-icon-box">
+                  <ion-icon name="logo-linkedin"></ion-icon>
+                </div>
+                <div>
+                  <p class="contact-label">LinkedIn</p>
+                  <a href="{{ profile.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="contact-val">{{ profile.linkedin_url }}</a>
+                </div>
+              </li>
+              {% endif %}
+              {% endfor %}
+
+              {% if profile.location %}
+              <li class="contact-link-item">
+                <div class="contact-icon-box">
+                  <ion-icon name="location-outline"></ion-icon>
+                </div>
+                <div>
+                  <p class="contact-label">Location</p>
+                  <span class="contact-val">{{ profile.location }}</span>
+                </div>
+              </li>
+              {% endif %}
+            </ul>
+
+            {% if profile.cv %}
+            <div class="cv-cta">
+              <a href="{{ profile.cv.url }}" target="_blank" class="cv-btn">
+                <ion-icon name="download-outline"></ion-icon>
+                Download My CV
+              </a>
+            </div>
+            {% endif %}
+
+          </div><!-- end contact-info-col -->
+
+          <!-- RIGHT: Contact Form -->
+          <div class="contact-form-col">
+            <form class="contact-form" id="contactForm" novalidate>
+              {% csrf_token %}
+              <!-- Honeypot anti-spam field -->
+              <input type="text" name="hp_company" style="display:none !important; position:absolute; left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+              <!-- Toast notification -->
+              <div class="contact-toast" id="contactToast" role="alert" aria-live="polite"></div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="contactName">Full Name <span class="required">*</span></label>
+                  <div class="input-wrap">
+                    <ion-icon name="person-outline"></ion-icon>
+                    <input type="text" id="contactName" name="name" placeholder="e.g. John Doe" required
+                      autocomplete="name">
+                  </div>
+                  <span class="field-error" id="errName"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="contactEmail">Email Address <span class="required">*</span></label>
+                  <div class="input-wrap">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="email" id="contactEmail" name="email" placeholder="you@example.com" required
+                      autocomplete="email">
+                  </div>
+                  <span class="field-error" id="errEmail"></span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="contactSubject">Subject</label>
+                <div class="input-wrap">
+                  <ion-icon name="chatbubble-outline"></ion-icon>
+                  <input type="text" id="contactSubject" name="subject" placeholder="What's this about?">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="contactMessage">Message <span class="required">*</span></label>
+                <div class="input-wrap textarea-wrap">
+                  <ion-icon name="create-outline"></ion-icon>
+                  <textarea id="contactMessage" name="message" rows="5" placeholder="Write your message here..."
+                    required></textarea>
+                </div>
+                <span class="field-error" id="errMessage"></span>
+              </div>
+
+              <button type="submit" class="contact-submit-btn" id="contactSubmitBtn">
+                <span class="btn-text">Send Message</span>
+                <span class="btn-spinner" style="display:none;">
+                  <ion-icon name="sync-outline" class="spin-icon"></ion-icon> Sending...
+                </span>
+                <ion-icon name="send-outline" class="btn-icon"></ion-icon>
+              </button>
+            </form>
+          </div><!-- end contact-form-col -->
+
+        </div><!-- end contact-layout -->
+      </section>
+    </article>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const form = document.getElementById('contactForm');
+    if (!form) return;
+
+    const btn = document.getElementById('contactSubmitBtn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnSpinner = btn.querySelector('.btn-spinner');
+    const btnIcon = btn.querySelector('.btn-icon');
+    const toast = document.getElementById('contactToast');
+
+    function showToast(msg, ok) {
+      toast.textContent = msg;
+      toast.className = 'contact-toast ' + (ok ? 'toast-success' : 'toast-error');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 6000);
+    }
+
+    function setError(id, msg) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = msg;
+    }
+
+    function clearErrors() {
+      ['errName', 'errEmail', 'errMessage'].forEach(id => setError(id, ''));
+      form.querySelectorAll('.input-wrap').forEach(w => w.classList.remove('input-error'));
+    }
+
+    function validate() {
+      let ok = true;
+      const nameInput = form.querySelector('#contactName');
+      const emailInput = form.querySelector('#contactEmail');
+      const msgInput = form.querySelector('#contactMessage');
+
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const msg = msgInput.value.trim();
+
+      if (!name) {
+        setError('errName', 'Please enter your name.');
+        nameInput.closest('.input-wrap')?.classList.add('input-error');
+        ok = false;
+      }
+      if (!email) {
+        setError('errEmail', 'Please enter your email address.');
+        emailInput.closest('.input-wrap')?.classList.add('input-error');
+        ok = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError('errEmail', 'Please enter a valid email address.');
+        emailInput.closest('.input-wrap')?.classList.add('input-error');
+        ok = false;
+      }
+      if (!msg) {
+        setError('errMessage', 'Please write a message.');
+        msgInput.closest('.input-wrap')?.classList.add('input-error');
+        ok = false;
+      }
+      return ok;
+    }
+
+    function setLoading(loading) {
+      btn.disabled = loading;
+      btnText.style.display = loading ? 'none' : 'inline';
+      btnSpinner.style.display = loading ? 'inline-flex' : 'none';
+      btnIcon.style.display = loading ? 'none' : 'inline';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErrors();
+      if (!validate()) return;
+
+      setLoading(true);
+      const data = new FormData(form);
+
+      try {
+        const res = await fetch("{% url 'portfolio:contact' %}", {
+          method: 'POST',
+          headers: { 'X-CSRFToken': data.get('csrfmiddlewaretoken') },
+          body: data,
+        });
+        const json = await res.json();
+        if (json.ok) {
+          showToast(json.message, true);
+          form.reset();
+        } else {
+          showToast(json.error || 'Something went wrong. Please try again.', false);
+        }
+      } catch (_) {
+        showToast('Network error. Please check your connection and try again.', false);
+      } finally {
+        setLoading(false);
+      }
+    });
+  })();
+</script>
+{% endblock %}

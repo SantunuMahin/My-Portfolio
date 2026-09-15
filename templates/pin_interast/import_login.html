@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="pin-main">
+
+  <div class="pin-import-page">
+    <div class="pin-breadcrumb">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <a href="{% url 'pin_interast:board_list' %}">Pin Interast</a>
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <span>Admin Access Required</span>
+    </div>
+
+    <div class="pin-import-card" style="max-width: 480px; margin: 40px auto 0 auto;">
+      <div class="pin-import-header" style="margin-bottom: 24px;">
+        <ion-icon name="lock-closed-outline" class="pin-import-logo" style="color: var(--accent);"></ion-icon>
+        <h1 class="pin-import-title">Importer Login</h1>
+        <p class="pin-import-sub">
+          Please log in with your account to access the Pinterest Importer dashboard.
+        </p>
+      </div>
+
+      <!-- Messages -->
+      {% if messages %}
+      <div class="pin-import-messages">
+        {% for message in messages %}
+        <div class="pin-import-msg pin-import-msg-{{ message.tags }}">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Login Form -->
+      <form method="POST" class="pin-import-form">
+        {% csrf_token %}
+        
+        <div class="pin-import-field">
+          <label for="login_username" class="pin-import-label">Username</label>
+          <input
+            type="text"
+            name="login_username"
+            id="login_username"
+            class="pin-import-input"
+            required
+            autocomplete="username"
+            placeholder="Enter admin username"
+          >
+        </div>
+
+        <div class="pin-import-field" style="margin-top: 10px;">
+          <label for="login_password" class="pin-import-label">Password</label>
+          <input
+            type="password"
+            name="login_password"
+            id="login_password"
+            class="pin-import-input"
+            required
+            autocomplete="current-password"
+            placeholder="••••••••"
+          >
+        </div>
+
+        <button type="submit" class="pin-import-submit" style="margin-top: 16px;">
+          <ion-icon name="log-in-outline"></ion-icon>
+          Log In & Proceed
+        </button>
+      </form>
+      
+      <p class="pin-import-hint" style="text-align: center; margin-top: 24px; font-size: 0.85rem;">
+        Don't have an account? <a href="{% url 'pin_interast:register' %}" style="color: var(--accent); font-weight: 600;">Register here</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

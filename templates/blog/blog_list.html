@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Blog — {{ profile.name|default:"Portfolio" }}{% endblock %}
+{% block meta_desc %}Thoughts, tutorials and explorations in tech from {{ profile.name|default:"a developer" }}.{% endblock %}
+
+{% block content %}
+<div class="blog-main">
+
+  <div class="blog-header">
+    <div class="blog-header-inner">
+      <h1 class="blog-page-title">My Blog</h1>
+      <p class="blog-page-sub">Thoughts, tutorials &amp; explorations in tech</p>
+    </div>
+  </div>
+
+  <div class="blog-layout">
+
+    <!-- Category filter sidebar -->
+    <aside class="blog-sidebar">
+      <div class="sidebar-search">
+        <form method="GET" action="{% url 'blog:list' %}" class="search-form" role="search">
+          <label class="visually-hidden" for="blogSearchInput">Search articles</label>
+          <input type="text" id="blogSearchInput" name="q" placeholder="Search articles..." value="{{ q }}">
+          {% if selected_category %}
+          <input type="hidden" name="category" value="{{ selected_category }}">
+          {% endif %}
+          <button type="submit" aria-label="Search"><ion-icon name="search-outline"></ion-icon></button>
+        </form>
+      </div>
+
+      <h3 class="sidebar-section-title">Categories</h3>
+      <ul class="category-filter-list">
+        <li>
+          <a href="{% url 'blog:list' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="cat-link {% if not selected_category %}active{% endif %}">
+            All Posts <span class="cat-count">{{ total_count }}</span>
+          </a>
+        </li>
+        {% for cat in categories %}
+        <li>
+          <a href="?category={{ cat.slug }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="cat-link {% if selected_category == cat.slug %}active{% endif %}">
+            {{ cat.name }} <span class="cat-count">{{ cat.post_count }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="sidebar-cta">
+        <a href="{% url 'books:list' %}" class="sidebar-back-btn" aria-label="View Books">
+          <ion-icon name="library-outline" aria-hidden="true"></ion-icon>
+          <span>Books I Read</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Posts grid -->
+    <section class="blog-posts-section">
+      {% if q or selected_category %}
+      <div class="book-section-head" style="margin-bottom: 24px;">
+        <div>
+          <h2>
+            {% if selected_category and q %}
+            Articles for "{{ q }}" in {{ selected_category|title }}
+            {% elif selected_category %}
+            Category: {{ selected_category|title }}
+            {% elif q %}
+            Search results for "{{ q }}"
+            {% endif %}
+          </h2>
+          <p>Showing matching articles from the blog.</p>
+        </div>
+        <a href="{% url 'blog:list' %}" class="clear-filter-link">Clear filters</a>
+      </div>
+      {% endif %}
+
+      {% if posts %}
+      <ul class="blog-posts-grid">
+        {% for post in posts %}
+        <li class="blog-card">
+          <a href="{{ post.get_absolute_url }}">
+            <figure class="blog-card-banner">
+              {% if post.banner_image_url %}
+              <img src="{{ post.banner_image_url }}" alt="{{ post.title }}" loading="lazy">
+              {% else %}
+              <div class="blog-banner-placeholder">
+                <ion-icon name="document-text-outline"></ion-icon>
+              </div>
+              {% endif %}
+              <div class="blog-card-overlay"></div>
+            </figure>
+
+            <div class="blog-card-content">
+              <div class="blog-card-meta">
+                {% if post.category %}
+                <span class="blog-cat-badge">{{ post.category.name }}</span>
+                {% endif %}
+                <time datetime="{{ post.created_at|date:'Y-m-d' }}">
+                  {{ post.created_at|date:"F j, Y" }}
+                </time>
+              </div>
+              <h2 class="blog-card-title">{{ post.title }}</h2>
+              {% if post.excerpt %}
+              <p class="blog-card-excerpt">{{ post.excerpt|truncatewords:25 }}</p>
+              {% endif %}
+              <span class="blog-read-more">Read more <ion-icon name="arrow-forward-outline"></ion-icon></span>
+            </div>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <nav class="pin-pagination" aria-label="Blog Pagination" style="margin-top: 32px;">
+        {% if page_obj.has_previous %}
+        <a href="?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"
+           class="pin-page-btn" aria-label="Previous Page">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </a>
+        {% endif %}
+        <span class="pin-page-info">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+        <a href="?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"
+           class="pin-page-btn" aria-label="Next Page">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </a>
+        {% endif %}
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="no-content">
+        <ion-icon name="document-text-outline" class="no-content-icon"></ion-icon>
+        {% if q or selected_category %}
+        <p>No articles matched your filter criteria.</p>
+        <a href="{% url 'blog:list' %}" class="sidebar-back-btn" style="margin-top: 10px;">Clear filters</a>
+        {% else %}
+        <p>No blog posts yet — check back soon!</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+  </div><!-- end .blog-layout -->
+</div>
+
+<script>
+  (function() {
+    function init() {
+      const cards = document.querySelectorAll('.blog-card');
+      cards.forEach(function (card, i) {
+        setTimeout(function () {
+          card.classList.add('reveal');
+        }, 60 * i);
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
+{% endblock %}

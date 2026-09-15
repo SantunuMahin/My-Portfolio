@@ -1,0 +1,497 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Reply to {{ msg.name }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  #reply-page-wrap {
+    --reply-bg: hsl(222, 47%, 6%);
+    --reply-card: hsla(222, 38%, 14%, 0.78);
+    --reply-card-hover: hsla(222, 38%, 18%, 0.92);
+    --reply-overlay: hsla(222, 40%, 8%, 0.64);
+    --reply-text: hsl(210, 40%, 96%);
+    --reply-secondary: hsl(215, 20%, 70%);
+    --reply-muted: hsl(215, 15%, 50%);
+    --reply-border: hsla(222, 30%, 30%, 0.58);
+    --reply-accent: hsl(188, 94%, 50%);
+    --reply-accent-2: hsl(280, 80%, 68%);
+    --reply-glow: hsla(188, 94%, 50%, 0.20);
+    --reply-gradient: linear-gradient(135deg, var(--reply-accent), var(--reply-accent-2));
+    --reply-radius-sm: 10px;
+    --reply-radius-md: 16px;
+    --reply-radius-full: 999px;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 24px;
+    max-width: 1120px;
+    color: var(--reply-secondary);
+    font-family: Poppins, "Segoe UI", system-ui, sans-serif;
+  }
+
+  #reply-page-wrap * {
+    box-sizing: border-box;
+  }
+
+  .reply-title {
+    margin: 0 0 20px;
+    color: var(--reply-text);
+    font-family: "Space Grotesk", Poppins, "Segoe UI", system-ui, sans-serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .reply-title span {
+    color: var(--reply-accent);
+  }
+
+  .rp-card,
+  .owner-card {
+    position: relative;
+    overflow: hidden;
+    background: var(--reply-card);
+    border: 1px solid var(--reply-border);
+    border-radius: var(--reply-radius-md);
+    box-shadow: 0 14px 36px hsla(0, 0%, 0%, 0.28);
+    backdrop-filter: blur(18px) saturate(150%);
+  }
+
+  .rp-card {
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .rp-card::before,
+  .owner-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: var(--reply-gradient);
+  }
+
+  .rp-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 16px;
+    color: var(--reply-accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+
+  .rp-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--reply-border);
+  }
+
+  .sender-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .sender-avatar,
+  .owner-avatar-init {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    color: #fff;
+    background: var(--reply-gradient);
+    border-radius: 22%;
+    font-family: "Space Grotesk", Poppins, sans-serif;
+    font-weight: 800;
+    box-shadow: 0 10px 28px var(--reply-glow);
+  }
+
+  .sender-avatar {
+    width: 54px;
+    height: 54px;
+    font-size: 1.35rem;
+  }
+
+  .sender-meta h2,
+  .owner-name {
+    margin: 0;
+    color: var(--reply-text);
+    font-family: "Space Grotesk", Poppins, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .sender-meta h2 {
+    font-size: 1.08rem;
+  }
+
+  .sender-meta p,
+  .reply-help,
+  .owner-bio {
+    color: var(--reply-muted);
+    font-size: 0.86rem;
+    line-height: 1.7;
+  }
+
+  .sender-meta p,
+  .reply-help {
+    margin: 5px 0 0;
+  }
+
+  .meta-table {
+    width: 100%;
+    margin-bottom: 16px;
+    border-collapse: collapse;
+  }
+
+  .meta-table td {
+    padding: 5px 0;
+    font-size: 0.88rem;
+    vertical-align: top;
+  }
+
+  .meta-table td:first-child {
+    width: 76px;
+    color: var(--reply-muted);
+  }
+
+  .meta-table td:last-child {
+    color: var(--reply-secondary);
+  }
+
+  .original-body {
+    padding: 15px 18px;
+    color: var(--reply-secondary);
+    background: var(--reply-overlay);
+    border-left: 3px solid var(--reply-accent);
+    border-radius: 0 var(--reply-radius-sm) var(--reply-radius-sm) 0;
+    font-size: 0.92rem;
+    line-height: 1.75;
+    white-space: pre-wrap;
+  }
+
+  .rp-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px 15px;
+    border-radius: var(--reply-radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .rp-alert.success {
+    color: hsl(145, 60%, 68%);
+    background: hsla(145, 60%, 48%, 0.12);
+    border: 1px solid hsla(145, 60%, 48%, 0.25);
+  }
+
+  .rp-alert.error {
+    color: hsl(0, 80%, 72%);
+    background: hsla(0, 80%, 60%, 0.10);
+    border: 1px solid hsla(0, 80%, 60%, 0.24);
+  }
+
+  .reply-textarea {
+    width: 100%;
+    min-height: 210px;
+    padding: 16px;
+    color: var(--reply-text);
+    background: var(--reply-overlay);
+    border: 1px solid var(--reply-border);
+    border-radius: var(--reply-radius-sm);
+    outline: none;
+    resize: vertical;
+    font: inherit;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+
+  .reply-textarea:focus {
+    border-color: var(--reply-accent);
+    background: hsla(222, 40%, 9%, 0.86);
+    box-shadow: 0 0 0 4px var(--reply-glow);
+  }
+
+  .reply-textarea::placeholder {
+    color: hsl(215, 15%, 38%);
+  }
+
+  .reply-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .btn-send {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 26px;
+    color: #fff;
+    background: var(--reply-gradient);
+    border: 0;
+    border-radius: var(--reply-radius-sm);
+    box-shadow: 0 10px 30px var(--reply-glow);
+    font-family: "Space Grotesk", Poppins, sans-serif;
+    font-size: 0.92rem;
+    font-weight: 700;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .btn-send:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+
+  .btn-cancel {
+    color: var(--reply-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .btn-cancel:hover {
+    color: var(--reply-accent);
+  }
+
+  .sidebar-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .owner-card {
+    padding: 0;
+  }
+
+  .owner-card-top {
+    padding: 24px 20px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, hsla(188, 94%, 50%, 0.12), hsla(280, 80%, 68%, 0.10));
+    border-bottom: 1px solid var(--reply-border);
+  }
+
+  .owner-card-top img {
+    display: block;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    object-fit: cover;
+    border: 2px solid hsla(188, 94%, 50%, 0.45);
+    border-radius: 22%;
+    box-shadow: 0 12px 30px var(--reply-glow);
+  }
+
+  .owner-avatar-init {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    font-size: 1.8rem;
+  }
+
+  .owner-name {
+    margin-top: 12px;
+    font-size: 1.05rem;
+  }
+
+  .owner-title {
+    display: inline-flex;
+    margin: 8px 0 0;
+    padding: 4px 14px;
+    color: #fff;
+    background: var(--reply-gradient);
+    border-radius: var(--reply-radius-full);
+    box-shadow: 0 8px 24px var(--reply-glow);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .owner-bio {
+    padding: 16px 18px 18px;
+  }
+
+  .quick-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .quick-link-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 13px;
+    color: var(--reply-secondary);
+    background: var(--reply-overlay);
+    border: 1px solid var(--reply-border);
+    border-radius: var(--reply-radius-sm);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+
+  .quick-link-btn:hover {
+    color: var(--reply-accent);
+    background: hsla(188, 94%, 50%, 0.08);
+    border-color: hsla(188, 94%, 50%, 0.35);
+    transform: translateX(3px);
+  }
+
+  .badge-new {
+    color: var(--reply-accent);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 900px) {
+    #reply-page-wrap {
+      grid-template-columns: 1fr;
+    }
+
+    .sidebar-col {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    .sidebar-col .rp-card,
+    .sidebar-col .owner-card {
+      flex: 1 1 260px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .rp-card {
+      padding: 18px;
+    }
+
+    .sender-header {
+      align-items: flex-start;
+    }
+
+    .reply-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .btn-send,
+    .btn-cancel {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="reply-page-wrap">
+  <div class="main-col">
+    <h1 class="reply-title">Replying to <span>{{ msg.name }}</span></h1>
+
+    {% if messages %}
+    {% for m in messages %}
+    <div class="rp-alert {% if m.tags == 'error' %}error{% else %}success{% endif %}">
+      <span>{% if m.tags == 'error' %}Alert{% else %}Success{% endif %}</span>
+      <span>{{ m }}</span>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="rp-card">
+      <p class="rp-label">Original Message</p>
+
+      <div class="sender-header">
+        <div class="sender-avatar">{{ msg.name|first|upper }}</div>
+        <div class="sender-meta">
+          <h2>{{ msg.name }}</h2>
+          <p>{{ msg.email }} &middot; {{ msg.sent_at|date:"N j, Y H:i" }}</p>
+        </div>
+      </div>
+
+      <table class="meta-table">
+        <tr>
+          <td>Subject</td>
+          <td>{{ msg.subject|default:"(no subject)" }}</td>
+        </tr>
+      </table>
+
+      <div class="original-body">{{ msg.message }}</div>
+    </div>
+
+    <div class="rp-card">
+      <p class="rp-label">Your Reply</p>
+      <p class="reply-help">
+        This will be sent to <strong>{{ msg.email }}</strong> with your branded signature.
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+        <textarea name="reply_text" class="reply-textarea" rows="10" required
+          placeholder="Hi {{ msg.name }},&#10;&#10;Thanks for getting in touch!"></textarea>
+
+        <div class="reply-actions">
+          <button type="submit" class="btn-send">Send Reply</button>
+          <a href="{% url 'admin:portfolio_contactmessage_changelist' %}" class="btn-cancel">
+            Back to messages
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="sidebar-col">
+    <div class="owner-card">
+      <div class="owner-card-top">
+        {% if profile and profile.avatar %}
+        <img src="{{ profile.avatar.url }}" alt="{{ profile.name }}" width="80" height="80">
+        {% else %}
+        <img src="https://i.ibb.co/5Zv3qhg/unnamed.jpg" alt="{{ profile.name|default:'S' }}" width="80" height="80">
+        {% endif %}
+        <p class="owner-name">{{ profile.name|default:"Santunu Kaysar" }}</p>
+        <p class="owner-title">{{ profile.title|default:"Full Stack Developer" }}</p>
+      </div>
+      <div class="owner-bio">
+        {% if profile and profile.bio %}
+        {{ profile.bio|truncatewords:30 }}
+        {% else %}
+        Building elegant, functional web applications with clean code and thoughtful UX.
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="rp-card" style="margin-bottom:0;">
+      <p class="rp-label">Your Pages</p>
+      <div class="quick-links">
+        <a href="/" target="_blank" class="quick-link-btn">Portfolio <span class="badge-new">Open</span></a>
+        <a href="/blog/" target="_blank" class="quick-link-btn">Blog <span class="badge-new">Open</span></a>
+        <a href="/books/" target="_blank" class="quick-link-btn">Books <span class="badge-new">Open</span></a>
+        <a href="/pins/" target="_blank" class="quick-link-btn">Pinterest Board <span class="badge-new">Open</span></a>
+        <a href="/tasks/" target="_blank" class="quick-link-btn">Planner <span class="badge-new">Open</span></a>
+
+        {% if profile and profile.github_url %}
+        <a href="{{ profile.github_url }}" target="_blank" class="quick-link-btn">GitHub <span
+            class="badge-new">External</span></a>
+        {% endif %}
+
+        {% if profile and profile.linkedin_url %}
+        <a href="{{ profile.linkedin_url }}" target="_blank" class="quick-link-btn">LinkedIn <span
+            class="badge-new">External</span></a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="tracker-main">
+
+  <div class="tracker-header">
+    <div class="tracker-header-inner">
+      <h1 class="tracker-title">Task Planner</h1>
+      <p class="tracker-sub">Kanban board + Pomodoro timer to stay focused</p>
+    </div>
+  </div>
+
+  <div class="tracker-layout">
+
+    <!-- ===== POMODORO TIMER ===== -->
+    <section class="pomodoro-section">
+      <div class="pomodoro-card">
+        <h2 class="pomodoro-title">
+          <ion-icon name="timer-outline"></ion-icon> Pomodoro Timer
+        </h2>
+
+        <div class="pomodoro-modes">
+          <button class="pomo-mode-btn active" data-pomo-mode="work" data-minutes="25">Work (25m)</button>
+          <button class="pomo-mode-btn" data-pomo-mode="short" data-minutes="5">Short Break (5m)</button>
+          <button class="pomo-mode-btn" data-pomo-mode="long" data-minutes="15">Long Break (15m)</button>
+        </div>
+
+        <div class="pomodoro-clock">
+          <svg class="timer-ring" viewBox="0 0 200 200">
+            <defs>
+              <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="var(--accent)" />
+                <stop offset="100%" stop-color="var(--accent-2)" />
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="100" cy="100" r="90" />
+            <circle class="ring-progress" id="timerRing" cx="100" cy="100" r="90" />
+          </svg>
+          <div class="timer-display">
+            <span id="timerMinutes">25</span>:<span id="timerSeconds">00</span>
+          </div>
+        </div>
+
+        <div class="pomodoro-controls">
+          <button class="pomo-btn" id="pomoBtnStart">
+            <ion-icon name="play-outline"></ion-icon> Start
+          </button>
+          <button class="pomo-btn pomo-btn-pause" id="pomoBtnPause" disabled>
+            <ion-icon name="pause-outline"></ion-icon> Pause
+          </button>
+          <button class="pomo-btn pomo-btn-reset" id="pomoBtnReset">
+            <ion-icon name="refresh-outline"></ion-icon> Reset
+          </button>
+        </div>
+
+        <div class="pomo-session-count">
+          Sessions completed: <span id="pomoSessionCount">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== KANBAN BOARD ===== -->
+    <section class="kanban-section">
+
+      <div class="kanban-header">
+        <h2 class="kanban-title">
+          <ion-icon name="grid-outline"></ion-icon> Task Board
+        </h2>
+        {% if user.is_superuser %}
+        <button class="add-task-btn" id="addTaskBtn">
+          <ion-icon name="add-outline"></ion-icon>
+          Add Task
+        </button>
+        {% else %}
+        <a href="https://app.todoist.com/" target="_blank" class="add-task-btn">
+          <ion-icon name="open-outline"></ion-icon>
+          Add Your Tasks Here!
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="kanban-board" id="kanbanBoard">
+
+        <!-- TO DO -->
+        <div class="kanban-column" id="col-todo" data-status="todo">
+          <div class="kanban-col-header">
+            <span class="kanban-col-dot dot-todo"></span>
+            <h3>To Do</h3>
+            <span class="kanban-col-count" id="count-todo">{{ tasks_todo.count }}</span>
+          </div>
+          <div class="kanban-cards" id="cards-todo">
+            {% for task in tasks_todo %}
+            <div class="kanban-card" data-task-id="{{ task.id }}" data-status="todo" data-priority="{{ task.priority }}"
+              data-description="{{ task.description }}" data-due-date="{{ task.due_date|date:'Y-m-d' }}"
+              draggable="true">
+              <div class="card-priority priority-{{ task.priority }}">{{ task.get_priority_display }}</div>
+              <h4 class="card-title">{{ task.title }}</h4>
+              {% if task.description %}<p class="card-desc">{{ task.description|truncatewords:15 }}</p>{% endif %}
+              {% if task.due_date %}<span class="card-due"><ion-icon name="calendar-outline"></ion-icon> {{
+                task.due_date }}</span>{% endif %}
+              <div class="card-actions">
+                <button class="card-edit-btn" data-task-id="{{ task.id }}" title="Edit Task">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="card-move-btn" data-task-id="{{ task.id }}" data-move="in_progress"
+                  title="Move to In Progress">
+                  <ion-icon name="arrow-forward-outline"></ion-icon>
+                </button>
+                <button class="card-delete-btn" data-task-id="{{ task.id }}" title="Delete">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- IN PROGRESS -->
+        <div class="kanban-column" id="col-in_progress" data-status="in_progress">
+          <div class="kanban-col-header">
+            <span class="kanban-col-dot dot-progress"></span>
+            <h3>In Progress</h3>
+            <span class="kanban-col-count" id="count-in_progress">{{ tasks_in_progress.count }}</span>
+          </div>
+          <div class="kanban-cards" id="cards-in_progress">
+            {% for task in tasks_in_progress %}
+            <div class="kanban-card" data-task-id="{{ task.id }}" data-status="in_progress"
+              data-priority="{{ task.priority }}" data-description="{{ task.description }}"
+              data-due-date="{{ task.due_date|date:'Y-m-d' }}" draggable="true">
+              <div class="card-priority priority-{{ task.priority }}">{{ task.get_priority_display }}</div>
+              <h4 class="card-title">{{ task.title }}</h4>
+              {% if task.description %}<p class="card-desc">{{ task.description|truncatewords:15 }}</p>{% endif %}
+              {% if task.due_date %}<span class="card-due"><ion-icon name="calendar-outline"></ion-icon> {{
+                task.due_date }}</span>{% endif %}
+              <div class="card-actions">
+                <button class="card-edit-btn" data-task-id="{{ task.id }}" title="Edit Task">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="card-move-btn" data-task-id="{{ task.id }}" data-move="todo" title="Move Back">
+                  <ion-icon name="arrow-back-outline"></ion-icon>
+                </button>
+                <button class="card-move-btn" data-task-id="{{ task.id }}" data-move="done" title="Mark Done">
+                  <ion-icon name="checkmark-outline"></ion-icon>
+                </button>
+                <button class="card-delete-btn" data-task-id="{{ task.id }}" title="Delete">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- DONE -->
+        <div class="kanban-column" id="col-done" data-status="done">
+          <div class="kanban-col-header">
+            <span class="kanban-col-dot dot-done"></span>
+            <h3>Done</h3>
+            <span class="kanban-col-count" id="count-done">{{ tasks_done.count }}</span>
+          </div>
+          <div class="kanban-cards" id="cards-done">
+            {% for task in tasks_done %}
+            <div class="kanban-card card-done" data-task-id="{{ task.id }}" data-status="done"
+              data-priority="{{ task.priority }}" data-description="{{ task.description }}"
+              data-due-date="{{ task.due_date|date:'Y-m-d' }}" draggable="true">
+              <div class="card-priority priority-{{ task.priority }}">{{ task.get_priority_display }}</div>
+              <h4 class="card-title">{{ task.title }}</h4>
+              {% if task.description %}<p class="card-desc">{{ task.description|truncatewords:15 }}</p>{% endif %}
+              {% if task.due_date %}<span class="card-due"><ion-icon name="calendar-outline"></ion-icon> {{
+                task.due_date }}</span>{% endif %}
+              <div class="card-actions">
+                <button class="card-edit-btn" data-task-id="{{ task.id }}" title="Edit Task">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="card-move-btn" data-task-id="{{ task.id }}" data-move="in_progress" title="Reopen">
+                  <ion-icon name="refresh-outline"></ion-icon>
+                </button>
+                <button class="card-delete-btn" data-task-id="{{ task.id }}" title="Delete">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div><!-- end .kanban-board -->
+    </section>
+
+    <!-- Tracker Toast Notification -->
+    <div class="contact-toast" id="trackerToast" role="alert" aria-live="polite"></div>
+
+  </div><!-- end .tracker-layout -->
+</div><!-- end .tracker-main -->
+
+<!-- Add / Edit Task Modal -->
+<div class="modal-overlay" id="taskModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose" aria-label="Close modal"><ion-icon name="close-outline"></ion-icon></button>
+    <h2 class="modal-title" id="modalTitle">Add New Task</h2>
+    <form id="addTaskForm" data-mode="add" data-task-id="">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="taskTitle">Title *</label>
+        <input type="text" id="taskTitle" name="title" placeholder="Task name..." required autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="taskDesc">Description</label>
+        <textarea id="taskDesc" name="description" rows="3" placeholder="Optional details..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="taskPriority">Priority</label>
+          <select id="taskPriority" name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="taskStatus">Column</label>
+          <select id="taskStatus" name="status">
+            <option value="todo">To Do</option>
+            <option value="in_progress">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="taskDueDate">Due Date</label>
+        <input type="date" id="taskDueDate" name="due_date">
+      </div>
+      <button type="submit" class="submit-btn" id="modalSubmitBtn">
+        <ion-icon name="add-outline" id="modalSubmitIcon"></ion-icon> <span id="modalSubmitText">Add Task</span>
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/tracker.js' %}"></script>
+{% endblock %}

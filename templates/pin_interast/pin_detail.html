@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta_desc %}{{ pin.description|default:pin.title|truncatewords:25 }}{% endblock %}
+
+{% block content %}
+<div class="pin-main">
+
+  <!-- ===== BREADCRUMB ===== -->
+  <div class="pin-detail-breadcrumb">
+    <ion-icon name="chevron-forward-outline"></ion-icon>
+    <a href="{% url 'pin_interast:board_list' %}">Pin Interast</a>
+    {% if pin.board %}
+    <ion-icon name="chevron-forward-outline"></ion-icon>
+    <a href="{{ pin.board.get_absolute_url }}">{{ pin.board.name }}</a>
+    {% endif %}
+    <ion-icon name="chevron-forward-outline"></ion-icon>
+    <span>{{ pin.title|truncatechars:30 }}</span>
+  </div>
+
+  <!-- ===== PIN DETAIL LAYOUT ===== -->
+  <article class="pin-detail-layout" id="pin-detail-{{ pin.pk }}">
+
+    <!-- Left: Full image -->
+    <div class="pin-detail-image-wrap">
+      {% if pin.pin_image_url %}
+      <figure class="pin-detail-figure">
+        <img src="{{ pin.pin_image_url }}" alt="{{ pin.title }}" id="pin-main-image">
+      </figure>
+      {% else %}
+      <div class="pin-detail-no-image">
+        <ion-icon name="image-outline"></ion-icon>
+        <p>No image available</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Info panel -->
+    <aside class="pin-detail-info">
+
+      <!-- Actions -->
+      <div class="pin-detail-actions">
+        {% if pin.source_url %}
+        <a href="{{ pin.source_url }}" target="_blank" rel="noopener noreferrer"
+           class="pin-action-btn pin-action-primary" id="pin-source-link">
+          <ion-icon name="open-outline"></ion-icon>
+          Visit Source
+        </a>
+        {% endif %}
+        {% if pin.pin_image_url %}
+        <a href="{{ pin.pin_image_url }}" download target="_blank"
+           class="pin-action-btn pin-action-secondary" id="pin-download-btn">
+          <ion-icon name="download-outline"></ion-icon>
+          Save Image
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- Board badge -->
+      {% if pin.board %}
+      <a href="{{ pin.board.get_absolute_url }}" class="pin-detail-board-badge" id="pin-board-badge">
+        <ion-icon name="folder-outline"></ion-icon>
+        {{ pin.board.name }}
+      </a>
+      {% endif %}
+
+      <!-- Title & description -->
+      <h1 class="pin-detail-title">{{ pin.title }}</h1>
+      {% if pin.description %}
+      <p class="pin-detail-desc">{{ pin.description }}</p>
+      {% endif %}
+
+      <!-- Tags -->
+      {% if pin.tag_list %}
+      <div class="pin-detail-tags" id="pin-tags">
+        {% for tag in pin.tag_list %}
+        <a href="{% if pin.board %}{% url 'pin_interast:board_detail' pin.board.slug %}?tag={{ tag }}{% else %}{% url 'pin_interast:all_pins' %}?tag={{ tag }}{% endif %}"
+           class="pin-detail-tag">
+          #{{ tag }}
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Meta info -->
+      <div class="pin-detail-meta">
+        <time datetime="{{ pin.created_at|date:'Y-m-d' }}" class="pin-detail-date">
+          <ion-icon name="calendar-outline"></ion-icon>
+          Pinned {{ pin.created_at|date:"F j, Y" }}
+        </time>
+        {% if pin.pinterest_pin_id %}
+        <span class="pin-detail-pinterest-badge">
+          <ion-icon name="logo-pinterest"></ion-icon>
+          {% if pin.board.pinterest_username %}
+            Via @{{ pin.board.pinterest_username }} on Pinterest
+          {% else %}
+            Via Pinterest
+          {% endif %}
+        </span>
+        {% endif %}
+      </div>
+
+    </aside>
+  </article>
+
+  <!-- ===== RELATED PINS ===== -->
+  {% if related_pins %}
+  <section class="pin-related-section">
+    <h2 class="pin-related-title">
+      More from {% if pin.board %}{{ pin.board.name }}{% else %}the Collection{% endif %}
+    </h2>
+    <div class="pin-masonry" id="related-pins-masonry">
+      {% for rpin in related_pins %}
+      {% if rpin.pin_image_url %}
+      <div class="pin-card" id="related-pin-{{ rpin.pk }}">
+        <a href="{{ rpin.get_absolute_url }}">
+          <figure class="pin-card-img-wrap">
+            <img src="{{ rpin.pin_image_url }}" alt="{{ rpin.title }}" loading="lazy">
+            <div class="pin-card-overlay">
+              <span class="pin-card-title-hover">{{ rpin.title }}</span>
+            </div>
+          </figure>
+        </a>
+        <div class="pin-card-footer">
+          <span class="pin-card-footer-title">{{ rpin.title|truncatechars:40 }}</span>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}

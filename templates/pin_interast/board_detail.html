@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ board.name }} — Pin Interast{% endblock %}
+{% block meta_desc %}Browse all pins in the {{ board.name }} board. {{ board.description|truncatewords:20 }}{% endblock %}
+
+{% block content %}
+<div class="pin-main">
+
+  <!-- ===== BOARD HEADER ===== -->
+  <div class="pin-board-hero">
+    {% if board.cover_image_url %}
+    <div class="pin-board-hero-bg">
+      <img src="{{ board.cover_image_url }}" alt="{{ board.name }}">
+      <div class="pin-board-hero-overlay"></div>
+    </div>
+    {% endif %}
+    <div class="pin-board-hero-content">
+      <div class="pin-breadcrumb">
+        <ion-icon name="chevron-forward-outline"></ion-icon>
+        <a href="{% url 'pin_interast:board_list' %}">Pin Interast</a>
+        <ion-icon name="chevron-forward-outline"></ion-icon>
+        <span>{{ board.name }}</span>
+      </div>
+      <h1 class="pin-board-hero-title">{{ board.name }}</h1>
+      {% if board.description %}
+      <p class="pin-board-hero-desc">{{ board.description }}</p>
+      {% endif %}
+      <div class="pin-board-hero-meta">
+        <span><ion-icon name="image-outline"></ion-icon> {{ page_obj.paginator.count }} pin{{ page_obj.paginator.count|pluralize }}</span>
+        {% if board.pinterest_username %}
+        <span class="pin-board-hero-owner" title="Imported from Pinterest account of {{ board.pinterest_owner_name|default:board.pinterest_username }}">
+          <ion-icon name="logo-pinterest"></ion-icon>
+          Imported from: 
+          <strong>
+            {% if board.pinterest_owner_name %}
+              {{ board.pinterest_owner_name }} (@{{ board.pinterest_username }})
+            {% else %}
+              @{{ board.pinterest_username }}
+            {% endif %}
+          </strong>
+        </span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAG FILTER CHIPS ===== -->
+  {% if all_tags %}
+  <div class="pin-tag-filter-bar" id="tag-filter-bar">
+    <a href="{% url 'pin_interast:board_detail' board.slug %}"
+       class="pin-tag-chip {% if not selected_tag %}active{% endif %}"
+       id="tag-chip-all">
+      All
+    </a>
+    {% for tag in all_tags %}
+    <a href="?tag={{ tag }}"
+       class="pin-tag-chip {% if selected_tag == tag %}active{% endif %}"
+       id="tag-chip-{{ forloop.counter }}">
+      {{ tag }}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ===== MASONRY PIN GRID ===== -->
+  {% if page_obj.object_list %}
+  <div class="pin-masonry pin-masonry-board" id="board-pin-masonry">
+    {% for pin in page_obj %}
+    {% if pin.pin_image_url %}
+    <div class="pin-card" id="pin-card-{{ pin.pk }}">
+      <a href="{{ pin.get_absolute_url }}">
+        <figure class="pin-card-img-wrap">
+          <img src="{{ pin.pin_image_url }}" alt="{{ pin.title }}" loading="lazy">
+          <div class="pin-card-overlay">
+            <span class="pin-card-title-hover">{{ pin.title }}</span>
+            {% if pin.tag_list %}
+            <div class="pin-card-tags-hover">
+              {% for tag in pin.tag_list|slice:":3" %}
+              <span class="pin-mini-tag">{{ tag }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% if pin.source_url %}
+          <a href="{{ pin.source_url }}" target="_blank" rel="noopener"
+             class="pin-card-source-btn" onclick="event.stopPropagation()"
+             title="Visit source">
+            <ion-icon name="open-outline"></ion-icon>
+          </a>
+          {% endif %}
+        </figure>
+      </a>
+      <div class="pin-card-footer">
+        <span class="pin-card-footer-title">{{ pin.title|truncatechars:40 }}</span>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- ===== PAGINATION ===== -->
+  {% if page_obj.has_other_pages %}
+  <nav class="pin-pagination" aria-label="Pagination">
+    {% if page_obj.has_previous %}
+    <a href="?{% if selected_tag %}tag={{ selected_tag }}&{% endif %}page={{ page_obj.previous_page_number }}"
+       class="pin-page-btn" id="pin-prev-btn">
+      <ion-icon name="chevron-back-outline"></ion-icon>
+    </a>
+    {% endif %}
+    <span class="pin-page-info">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+    <a href="?{% if selected_tag %}tag={{ selected_tag }}&{% endif %}page={{ page_obj.next_page_number }}"
+       class="pin-page-btn" id="pin-next-btn">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+    </a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="pin-empty-state">
+    <ion-icon name="image-outline"></ion-icon>
+    <p>
+      {% if selected_tag %}
+        No pins tagged "{{ selected_tag }}" in this board.
+        <a href="{% url 'pin_interast:board_detail' board.slug %}">Clear filter</a>
+      {% else %}
+        This board has no pins yet.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

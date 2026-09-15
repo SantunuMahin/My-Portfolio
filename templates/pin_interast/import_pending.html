@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="pin-main">
+
+  <div class="pin-import-page">
+    <div class="pin-breadcrumb">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <a href="{% url 'pin_interast:board_list' %}">Pin Interast</a>
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <span>Permission Pending</span>
+    </div>
+
+    <div class="pin-import-card" style="max-width: 500px; margin: 50px auto 0 auto; text-align: center;">
+      <div class="pin-import-header" style="margin-bottom: 20px;">
+        <ion-icon name="hourglass-outline" class="pin-import-logo" style="color: var(--orange-yellow-crayola);"></ion-icon>
+        <h1 class="pin-import-title">Permission Pending</h1>
+        <p class="pin-import-sub">
+          Hello <strong>{{ request.user.username }}</strong>! Your account is active, but you do not have permission to import boards yet.
+        </p>
+      </div>
+
+      <div class="pin-import-msg pin-import-msg-error" style="background: hsla(35, 90%, 55%, 0.1); color: var(--orange-yellow-crayola); border-color: hsla(35, 90%, 55%, 0.25); text-align: left; margin-bottom: 24px;">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <div>
+          <strong>Waiting for Admin Approval</strong>
+          <p style="margin-top: 6px; font-size: 0.85rem; opacity: 0.9; line-height: 1.5;">
+            To import Pinterest boards, a site administrator must grant permissions to your account. Please ask the administrator to grant you access via the admin CMS.
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+        <a href="{% url 'pin_interast:board_list' %}" class="pin-btn-primary" style="width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 8px;">
+          <ion-icon name="images-outline"></ion-icon>
+          Browse Inspiration Boards
+        </a>
+        
+        <!-- Log Out Form -->
+        <form method="POST" action="{% url 'pin_interast:import' %}" style="width: 100%;">
+          {% csrf_token %}
+          <input type="hidden" name="logout" value="true">
+          <button type="submit" class="pin-btn-secondary" style="width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius-full); padding: 12px; background: var(--bg-secondary); color: var(--text-primary); transition: var(--transition);">
+            <ion-icon name="log-out-outline"></ion-icon>
+            Log Out / Switch Account
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

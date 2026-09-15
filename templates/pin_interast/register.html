@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="pin-main">
+
+  <div class="pin-import-page">
+    <div class="pin-breadcrumb">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <a href="{% url 'pin_interast:board_list' %}">Pin Interast</a>
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <span>Register Account</span>
+    </div>
+
+    <div class="pin-import-card" style="max-width: 540px; margin: 30px auto 0 auto;">
+      <div class="pin-import-header" style="margin-bottom: 20px;">
+        <ion-icon name="person-add-outline" class="pin-import-logo" style="color: var(--accent);"></ion-icon>
+        <h1 class="pin-import-title">Create Account</h1>
+        <p class="pin-import-sub">
+          Register to import your Pinterest boards. Note: Accounts require administrator approval.
+        </p>
+      </div>
+
+      <!-- Messages -->
+      {% if messages %}
+      <div class="pin-import-messages">
+        {% for message in messages %}
+        <div class="pin-import-msg pin-import-msg-{{ message.tags }}">
+          <ion-icon name="{% if 'success' in message.tags %}checkmark-circle-outline{% else %}alert-circle-outline{% endif %}"></ion-icon>
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Register Form -->
+      <form method="POST" class="pin-import-form">
+        {% csrf_token %}
+        
+        <div style="display: flex; gap: 15px;">
+          <div class="pin-import-field" style="flex: 1;">
+            <label for="reg_first_name" class="pin-import-label">First Name</label>
+            <input
+              type="text"
+              name="reg_first_name"
+              id="reg_first_name"
+              class="pin-import-input"
+              placeholder="First name"
+              value="{{ request.POST.reg_first_name|default:'' }}"
+            >
+          </div>
+          <div class="pin-import-field" style="flex: 1;">
+            <label for="reg_last_name" class="pin-import-label">Last Name</label>
+            <input
+              type="text"
+              name="reg_last_name"
+              id="reg_last_name"
+              class="pin-import-input"
+              placeholder="Last name"
+              value="{{ request.POST.reg_last_name|default:'' }}"
+            >
+          </div>
+        </div>
+
+        <div class="pin-import-field" style="margin-top: 10px;">
+          <label for="reg_username" class="pin-import-label">Username *</label>
+          <input
+            type="text"
+            name="reg_username"
+            id="reg_username"
+            class="pin-import-input"
+            required
+            autocomplete="username"
+            placeholder="Choose username"
+            value="{{ request.POST.reg_username|default:'' }}"
+          >
+        </div>
+
+        <div class="pin-import-field" style="margin-top: 10px;">
+          <label for="reg_email" class="pin-import-label">Email *</label>
+          <input
+            type="email"
+            name="reg_email"
+            id="reg_email"
+            class="pin-import-input"
+            required
+            autocomplete="email"
+            placeholder="you@example.com"
+            value="{{ request.POST.reg_email|default:'' }}"
+          >
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 10px;">
+          <div class="pin-import-field" style="flex: 1;">
+            <label for="reg_password" class="pin-import-label">Password *</label>
+            <input
+              type="password"
+              name="reg_password"
+              id="reg_password"
+              class="pin-import-input"
+              required
+              autocomplete="new-password"
+              placeholder="••••••••"
+            >
+          </div>
+          <div class="pin-import-field" style="flex: 1;">
+            <label for="reg_password_confirm" class="pin-import-label">Confirm Password *</label>
+            <input
+              type="password"
+              name="reg_password_confirm"
+              id="reg_password_confirm"
+              class="pin-import-input"
+              required
+              autocomplete="new-password"
+              placeholder="••••••••"
+            >
+          </div>
+        </div>
+
+        <button type="submit" class="pin-import-submit" style="margin-top: 20px;">
+          <ion-icon name="person-add-outline"></ion-icon>
+          Sign Up
+        </button>
+      </form>
+      
+      <p class="pin-import-hint" style="text-align: center; margin-top: 24px; font-size: 0.85rem;">
+        Already have an account? <a href="{% url 'pin_interast:import' %}" style="color: var(--accent); font-weight: 600;">Log In here</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

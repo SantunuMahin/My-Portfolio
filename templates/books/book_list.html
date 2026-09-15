@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Books I Read — {{ profile.name|default:"Portfolio" }}{% endblock %}
+{% block meta_desc %}Personal notes and reflections from non-fiction books I read.{% endblock %}
+
+{% block content %}
+<div class="blog-main books-main">
+  <div class="blog-header books-header">
+    <div class="blog-header-inner">
+      <h1 class="blog-page-title">Books I Read</h1>
+      <p class="blog-page-sub">Non-fiction notes, takeaways, and personal thoughts after reading</p>
+      <div class="books-hero-stats" aria-label="Reading stats">
+        <div class="books-stat reveal-on-scroll reveal-delay-1">
+          <span>{{ total_count }}</span>
+          <small>published notes</small>
+        </div>
+        <div class="books-stat reveal-on-scroll reveal-delay-2">
+          <span>{{ finished_count }}</span>
+          <small>finished</small>
+        </div>
+        <div class="books-stat reveal-on-scroll reveal-delay-3">
+          <span>{{ reading_count }}</span>
+          <small>reading now</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="blog-layout">
+    <aside class="blog-sidebar">
+      <div class="sidebar-search">
+        <form method="GET" action="{% url 'books:list' %}" class="search-form">
+          <input type="text" name="q" placeholder="Search title or author..." value="{{ q }}">
+          {% if selected_status %}
+          <input type="hidden" name="status" value="{{ selected_status }}">
+          {% endif %}
+          <button type="submit" aria-label="Search"><ion-icon name="search-outline"></ion-icon></button>
+        </form>
+      </div>
+
+      <h3 class="sidebar-section-title">Reading Shelf</h3>
+      <ul class="category-filter-list">
+        <li>
+          <a href="{% url 'books:list' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="cat-link {% if not selected_status %}active{% endif %}">
+            All Books <span class="cat-count">{{ total_count }}</span>
+          </a>
+        </li>
+        {% for status in status_list %}
+        <li>
+          <a href="?status={{ status.value }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="cat-link {% if selected_status == status.value %}active{% endif %}">
+            {{ status.label }} <span class="cat-count">{{ status.count }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="sidebar-cta">
+        {% if latest_book %}
+        <p class="sidebar-note">Latest reflection</p>
+        <a href="{{ latest_book.get_absolute_url }}" class="latest-book-link">{{ latest_book.title }}</a>
+        {% endif %}
+        <a href="{% url 'blog:list' %}" class="sidebar-back-btn">
+          <ion-icon name="newspaper-outline"></ion-icon> Read Blog
+        </a>
+      </div>
+    </aside>
+
+    <section class="blog-posts-section">
+      {% if books or q or selected_status %}
+      <div class="book-section-head">
+        <div>
+          <h2>Reading Notes</h2>
+          <p>
+            {% if q or selected_status %}
+            Filtered reflections from the shelf.
+            {% else %}
+            A public shelf of the ideas I kept after reading.
+            {% endif %}
+          </p>
+        </div>
+        <div class="book-sort-bar">
+          <span class="sort-label">Sort:</span>
+          <a href="?{% if selected_status %}status={{ selected_status }}&{% endif %}{% if q %}q={{ q|urlencode }}&{% endif %}sort=recent" class="sort-chip {% if sort_by == 'recent' or not sort_by %}active{% endif %}">Recent</a>
+          <a href="?{% if selected_status %}status={{ selected_status }}&{% endif %}{% if q %}q={{ q|urlencode }}&{% endif %}sort=rating" class="sort-chip {% if sort_by == 'rating' %}active{% endif %}">Top Rated</a>
+          <a href="?{% if selected_status %}status={{ selected_status }}&{% endif %}{% if q %}q={{ q|urlencode }}&{% endif %}sort=title" class="sort-chip {% if sort_by == 'title' %}active{% endif %}">Title</a>
+          {% if q or selected_status or sort_by != 'recent' %}
+          <a href="{% url 'books:list' %}" class="clear-filter-link">Clear filters</a>
+          {% endif %}
+        </div>
+      </div>
+      <ul class="blog-posts-grid book-grid">
+        {% for book in books %}
+        <li class="blog-card book-card">
+          <a href="{{ book.get_absolute_url }}">
+            <figure class="blog-card-banner book-cover">
+              {% if book.cover_image_url %}
+              <img src="{{ book.cover_image_url }}" alt="{{ book.title }}" loading="lazy">
+              {% else %}
+              <div class="blog-banner-placeholder">
+                <ion-icon name="book-outline"></ion-icon>
+              </div>
+              {% endif %}
+              <div class="blog-card-overlay"></div>
+            </figure>
+
+            <div class="blog-card-content">
+              <div class="blog-card-meta">
+                <span class="status-badge status-{{ book.status_class }}">{{ book.get_status_display }}</span>
+                {% if book.read_date %}
+                <time datetime="{{ book.read_date|date:'Y-m-d' }}">{{ book.read_date|date:"F j, Y" }}</time>
+                {% endif %}
+              </div>
+              <h2 class="blog-card-title">{{ book.title }}</h2>
+              <p class="book-author">by {{ book.author }}</p>
+              {% if book.rating %}
+              <div class="book-rating" style="font-size: 14px; margin-top: -4px; margin-bottom: 10px;" aria-label="{{ book.rating }} out of 5">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= book.rating %}
+                    <ion-icon name="star"></ion-icon>
+                  {% else %}
+                    <ion-icon name="star-outline"></ion-icon>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              {% endif %}
+              {% if book.key_takeaway %}
+              <p class="blog-card-excerpt">{{ book.key_takeaway|truncatewords:6 }}</p>
+              {% endif %}
+              <span class="blog-read-more">Read reflection <ion-icon name="arrow-forward-outline"></ion-icon></span>
+            </div>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="no-content">
+        <ion-icon name="book-outline" class="no-content-icon"></ion-icon>
+        {% if q or selected_status %}
+        <p>No reflections matched this shelf filter.</p>
+        <a href="{% url 'books:list' %}" class="sidebar-back-btn" style="margin-top: 8px;">Clear filters</a>
+        {% else %}
+        <p>No book reflections published yet — check back soon!</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<script>
+  (function() {
+    function init() {
+      // Reveal stat counters
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) entry.target.classList.add('revealed');
+        });
+      }, { threshold: 0.2 });
+      document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+        observer.observe(el);
+      });
+
+      // Stagger book cards
+      const cards = document.querySelectorAll('.blog-card');
+      cards.forEach(function (card, i) {
+        setTimeout(function () { card.classList.add('reveal'); }, 60 * i);
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
+{% endblock %}

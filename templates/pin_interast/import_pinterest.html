@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="pin-main">
+
+  <div class="pin-import-page">
+    <div class="pin-breadcrumb">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <a href="{% url 'pin_interast:board_list' %}">Pin Interast</a>
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+      <span>Pinterest Import</span>
+    </div>
+
+    <div class="pin-import-card">
+      <div class="pin-import-header">
+        <ion-icon name="logo-pinterest" class="pin-import-logo"></ion-icon>
+        <h1 class="pin-import-title">Import from Pinterest</h1>
+        <p class="pin-import-sub">
+          Import pins from any <strong>public</strong> Pinterest board directly into your collection.
+        </p>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="pin-import-tabs"
+        style="display: flex; gap: 15px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; justify-content: center;">
+        <button type="button" class="pin-tab-btn" id="tab-auto-btn"
+          style="background: none; border: none; padding: 8px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid var(--accent); color: var(--text-primary);"
+          onclick="switchTab('auto')">
+          Automated URL Import
+        </button>
+        <button type="button" class="pin-tab-btn" id="tab-manual-btn"
+          style="background: none; border: none; padding: 8px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; color: var(--text-muted);"
+          onclick="switchTab('manual')">
+          Page Source Fallback (100% Reliable)
+        </button>
+      </div>
+
+      <!-- Messages -->
+      {% if messages %}
+      <div class="pin-import-messages" id="import-messages">
+        {% for message in messages %}
+        <div class="pin-import-msg pin-import-msg-{{ message.tags }}">
+          <ion-icon
+            name="{% if 'success' in message.tags %}checkmark-circle-outline{% else %}alert-circle-outline{% endif %}"></ion-icon>
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Import Form -->
+      <form method="POST" class="pin-import-form" id="pinterest-import-form">
+        {% csrf_token %}
+
+        <!-- Board URL input (always required for both tabs) -->
+        <div class="pin-import-field">
+          <label for="board_url" class="pin-import-label">Pinterest Board URL</label>
+          <input type="url" name="board_url" id="board_url" class="pin-import-input"
+            placeholder="https://www.pinterest.com/username/board-name/" required autocomplete="off"
+            value="{{ request.POST.board_url|default:'' }}">
+          <p class="pin-import-hint">
+            ⚠️ The board must be <strong>public</strong>. Private boards cannot be imported.
+          </p>
+        </div>
+
+        <!-- Tab 1: Automated Link description -->
+        <div id="auto-tab-content" style="display: block;">
+          <div class="pin-import-how" id="import-how-it-works" style="margin-top: 10px; margin-bottom: 0;">
+            <h3 class="pin-import-how-title">
+              <ion-icon name="information-circle-outline"></ion-icon>
+              How it works
+            </h3>
+            <ol class="pin-import-how-list">
+              <li>Copy the board URL from Pinterest.</li>
+              <li>Paste it above and click <strong>Import Board</strong>.</li>
+              <li>If the request is blocked by Pinterest's bot protection, use the **Page Source Fallback** tab above.
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Tab 2: Manual Page Source text area -->
+        <div id="manual-tab-content" style="display: none;">
+          <div class="pin-import-how" style="margin-top: 10px; margin-bottom: 16px;">
+            <h3 class="pin-import-how-title" style="color: var(--orange-yellow-crayola);">
+              <ion-icon name="shield-checkmark-outline"></ion-icon>
+              Bypass bot blocks successfully
+            </h3>
+            <ol class="pin-import-how-list">
+              <li>Open the public Pinterest board in a browser tab.</li>
+              <li>View the page HTML source (right-click &rarr; <strong>View Page Source</strong> or press
+                <code>Ctrl + U</code> / <code>Cmd + Option + U</code>).
+              </li>
+              <li>Select all (<code>Ctrl + A</code>), copy (<code>Ctrl + C</code>), and paste the content below.</li>
+            </ol>
+          </div>
+
+          <div class="pin-import-field">
+            <label for="pasted_source" class="pin-import-label">Pasted Board Page Source (HTML or JSON)</label>
+            <textarea name="pasted_source" id="pasted_source" class="pin-import-input" rows="8"
+              placeholder="Paste page source here..."
+              style="font-family: monospace; font-size: 0.8rem; resize: vertical;"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="pin-import-submit" id="import-submit-btn" style="margin-top: 12px;">
+          <ion-icon name="cloud-download-outline"></ion-icon>
+          Import Board
+        </button>
+      </form>
+
+      <!-- Error display -->
+      {% if error %}
+      <div class="pin-import-msg pin-import-msg-error" id="import-error-msg" style="margin-top:20px;">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <div>
+          <strong>Import failed:</strong>
+          <p style="margin-top:6px; font-size:0.85rem; opacity:0.9;">{{ error }}</p>
+          <p class="pin-import-hint" style="margin-top:8px; color: inherit; opacity: 0.85;">
+            Pinterest may be blocking our server IP. Please toggle the **Page Source Fallback** tab above to import
+            successfully!
+          </p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Result -->
+      {% if result %}
+      <div class="pin-import-result" id="import-result">
+        <h3>✅ Import Successful</h3>
+        <ul>
+          <li><strong>Board:</strong> <a href="{{ result.board.get_absolute_url }}">{{ result.board.name }}</a></li>
+          <li><strong>New pins created:</strong> {{ result.created }}</li>
+          <li><strong>Existing pins updated:</strong> {{ result.updated }}</li>
+          <li><strong>Skipped (no image):</strong> {{ result.skipped }}</li>
+        </ul>
+        <a href="{{ result.board.get_absolute_url }}" class="pin-btn-primary" id="view-imported-board-btn">
+          <ion-icon name="images-outline"></ion-icon> View Board
+        </a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function switchTab(mode) {
+    const autoTab = document.getElementById('auto-tab-content');
+    const manualTab = document.getElementById('manual-tab-content');
+    const autoBtn = document.getElementById('tab-auto-btn');
+    const manualBtn = document.getElementById('tab-manual-btn');
+    const sourceTextarea = document.getElementById('pasted_source');
+
+    if (mode === 'auto') {
+      if (autoTab) autoTab.style.display = 'block';
+      if (manualTab) manualTab.style.display = 'none';
+
+      // Update button colors
+      if (autoBtn) {
+        autoBtn.style.color = 'var(--text-primary)';
+        autoBtn.style.borderBottomColor = 'var(--accent)';
+      }
+
+      if (manualBtn) {
+        manualBtn.style.color = 'var(--text-muted)';
+        manualBtn.style.borderBottomColor = 'transparent';
+      }
+
+      // Remove requirement
+      if (sourceTextarea) sourceTextarea.removeAttribute('required');
+    } else {
+      if (autoTab) autoTab.style.display = 'none';
+      if (manualTab) manualTab.style.display = 'block';
+
+      // Update button colors
+      if (autoBtn) {
+        autoBtn.style.color = 'var(--text-muted)';
+        autoBtn.style.borderBottomColor = 'transparent';
+      }
+
+      if (manualBtn) {
+        manualBtn.style.color = 'var(--text-primary)';
+        manualBtn.style.borderBottomColor = 'var(--accent)';
+      }
+
+      // Set requirement
+      if (sourceTextarea) sourceTextarea.setAttribute('required', 'required');
+    }
+  }
+
+  // Pre-select tab if user already submitted pasted source
+  {% if request.POST.pasted_source %}
+  if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", function () {
+      switchTab("manual");
+    });
+  } else {
+    switchTab("manual");
+  }
+  {% endif %}
+</script>
+{% endblock %}
