@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Pin Interast — Visual Boards{% endblock %}
 {% block meta_desc %}A curated collection of visual inspiration boards — browse by category or explore all pins.
 {% endblock %}
+{% block body_class %}page-subpage page-pins{% endblock %}
 
 {% block content %}
 <div class="pin-main">
@@ -101,7 +103,20 @@
               <div class="vinyl-spindle"></div>
             </div>
           </div>
-          <div class="turntable-tonearm" id="turntableTonearm"></div>
+          <!-- Realistic Turntable Tonearm assembly -->
+          <div class="turntable-arm-assembly">
+            <div class="turntable-arm-base">
+              <div class="arm-pivot-ring"></div>
+            </div>
+            <div class="turntable-arm-rest"></div>
+            <div class="turntable-tonearm" id="turntableTonearm">
+              <div class="arm-counterweight"></div>
+              <div class="arm-shaft"></div>
+              <div class="arm-cartridge">
+                <div class="arm-stylus"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Right: Player Controls & Info -->
@@ -157,6 +172,9 @@
             <button class="player-fav-btn" id="btnPlayerFav" title="Favorite this track" aria-label="Favorite">
               <ion-icon name="heart-outline" id="playerFavIcon"></ion-icon>
             </button>
+            <button class="player-mini-btn player-download-btn" id="btnDownload" title="Download audio track" aria-label="Download audio track">
+              <ion-icon name="download-outline" id="downloadIcon"></ion-icon>
+            </button>
 
             <!-- Volume Control -->
             <div class="volume-slider-box">
@@ -204,6 +222,11 @@
             </div>
             <div class="item-meta-col">
               <span class="item-duration">{{ track.duration|default:"3:20" }}</span>
+              <button class="item-download-btn" data-action="download" data-id="{{ track.id }}"
+                data-url="{{ track.stream_url }}" data-title="{{ track.title }}" data-artist="{{ track.artist }}"
+                title="Download track" aria-label="Download {{ track.title }}">
+                <ion-icon name="download-outline"></ion-icon>
+              </button>
               <button class="item-fav-btn {% if track.is_favorite %}favorited{% endif %}" data-action="fav"
                 data-id="{{ track.id }}" title="Toggle Favorite" aria-label="Favorite">
                 <ion-icon name="{% if track.is_favorite %}heart{% else %}heart-outline{% endif %}"></ion-icon>
@@ -499,14 +522,15 @@
       list: "{% url 'pin_interast:api_music_tracks' %}",
       add: "{% url 'pin_interast:api_add_music_track' %}",
       favoriteTpl: "{% url 'pin_interast:api_toggle_favorite' 0 %}".replace('/0/', '/:id/'),
-      deleteTpl: "{% url 'pin_interast:api_delete_music_track' 0 %}".replace('/0/', '/:id/')
+      deleteTpl: "{% url 'pin_interast:api_delete_music_track' 0 %}".replace('/0/', '/:id/'),
+      downloadTpl: "{% url 'pin_interast:download_audio_track' 0 %}".replace('/0/', '/:id/')
     }
   };
 </script>
 <!-- Initial Music JSON Payload for instantaneous zero-latency hydration -->
 <script id="initialMusicJson" type="application/json">{{ audio_tracks_json|safe }}</script>
 <!-- Music Player Controller -->
-<script src="{% static 'js/pin_music.js' %}"></script>
+<script src="{% static 'js/pin_music.js' %}?v=2.4"></script>
 
 <script>
   (function () {

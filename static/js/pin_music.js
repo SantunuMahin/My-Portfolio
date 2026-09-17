@@ -42,12 +42,14 @@
       if (type === 'add' && urls.add) return urls.add;
       if (type === 'favorite' && urls.favoriteTpl) return urls.favoriteTpl.replace(':id', id);
       if (type === 'delete' && urls.deleteTpl) return urls.deleteTpl.replace(':id', id);
+      if (type === 'download' && urls.downloadTpl) return urls.downloadTpl.replace(':id', id);
     }
     const base = (window.location && window.location.pathname && window.location.pathname.startsWith('/pin-interast')) ? '/pin-interast' : '/pins';
     if (type === 'list') return `${base}/music/api/`;
     if (type === 'add') return `${base}/music/api/add/`;
     if (type === 'favorite') return `${base}/music/api/${id}/favorite/`;
     if (type === 'delete') return `${base}/music/api/${id}/delete/`;
+    if (type === 'download') return `${base}/music/${id}/download/`;
     return `${base}/music/api/`;
   }
 
@@ -72,6 +74,8 @@
   const btnRepeat = document.getElementById('btnRepeat');
   const btnPlayerFav = document.getElementById('btnPlayerFav');
   const playerFavIcon = document.getElementById('playerFavIcon');
+  const btnDownload = document.getElementById('btnDownload');
+  const downloadIcon = document.getElementById('downloadIcon');
 
   const progressTrack = document.getElementById('progressTrack');
   const progressBarFill = document.getElementById('progressBarFill');
@@ -128,6 +132,7 @@
       playerCurrentTime.textContent = '00:00';
       playerTotalDuration.textContent = '00:00';
       progressBarFill.style.width = '0%';
+      if (progressHandle) progressHandle.style.left = '0%';
       pauseTrack();
       return;
     }
@@ -305,6 +310,9 @@
         </div>
         <div class="item-meta-col">
           <span class="item-duration">${track.duration || '3:20'}</span>
+          <button class="item-download-btn" data-action="download" data-id="${track.id}" title="Download Track" aria-label="Download ${escapeHtml(track.title)}">
+            <ion-icon name="download-outline"></ion-icon>
+          </button>
           <button class="item-fav-btn ${track.is_favorite ? 'favorited' : ''}" data-action="fav" data-id="${track.id}" title="Toggle Favorite" aria-label="Favorite">
             <ion-icon name="${track.is_favorite ? 'heart' : 'heart-outline'}"></ion-icon>
           </button>
@@ -320,7 +328,14 @@
       li.addEventListener('click', (e) => {
         const favBtn = e.target.closest('[data-action="fav"]');
         const delBtn = e.target.closest('[data-action="del"]');
+        const downloadBtn = e.target.closest('[data-action="download"]');
         const playBtn = e.target.closest('[data-action="play"]');
+
+        if (downloadBtn) {
+          e.stopPropagation();
+          downloadTrack(track);
+          return;
+        }
 
         if (favBtn) {
           e.stopPropagation();
@@ -436,14 +451,54 @@
     return cookieValue || '';
   }
 
+  // Download toast notification
+  function showDownloadToast(message) {
+    let toast = document.getElementById('musicToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'musicToast';
+      toast.className = 'music-download-toast';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<ion-icon name="cloud-download-outline"></ion-icon> <span>${escapeHtml(message)}</span>`;
+    toast.classList.add('visible');
+    setTimeout(() => {
+      toast.classList.remove('visible');
+    }, 3200);
+  }
+
+  // Audio track downloader
+  function downloadTrack(track) {
+    if (!track) return;
+    const downloadUrl = getApiUrl('download', track.id);
+    const title = track.title || 'Track';
+    const artist = track.artist || 'Artist';
+    const filename = `${artist} - ${title}.mp3`.replace(/[\\/:*?"<>|]/g, '_');
+
+    showDownloadToast(`Downloading "${title}"...`);
+
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = filename;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (link.parentNode) link.parentNode.removeChild(link);
+    }, 200);
+  }
+
   // Audio events
   audio.addEventListener('timeupdate', () => {
     if (!audio.duration || isNaN(audio.duration)) return;
     const current = audio.currentTime;
     const total = audio.duration;
-    const percent = (current / total) * 100;
+    const percent = Math.min(100, Math.max(0, (current / total) * 100));
 
     progressBarFill.style.width = `${percent}%`;
+    if (progressHandle) {
+      progressHandle.style.left = `${percent}%`;
+    }
     playerCurrentTime.textContent = formatTime(current);
     playerTotalDuration.textContent = formatTime(total);
   });
@@ -475,11 +530,16 @@
 
     function seekFromEvent(e) {
       const rect = progressTrack.getBoundingClientRect();
-      const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-      const percentage = clickX / rect.width;
+      const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+      const clickX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+      const percentage = rect.width > 0 ? clickX / rect.width : 0;
+      const percent = percentage * 100;
       if (audio.duration) {
         audio.currentTime = percentage * audio.duration;
-        progressBarFill.style.width = `${percentage * 100}%`;
+        progressBarFill.style.width = `${percent}%`;
+        if (progressHandle) {
+          progressHandle.style.left = `${percent}%`;
+        }
       }
     }
 
@@ -546,6 +606,7 @@
 
   // Player controls
   btnPlayPause.addEventListener('click', togglePlay);
+  if (vinylDisk) vinylDisk.addEventListener('click', togglePlay);
   btnPrev.addEventListener('click', prevTrack);
   btnNext.addEventListener('click', nextTrack);
 
@@ -558,6 +619,24 @@
     isRepeat = !isRepeat;
     btnRepeat.classList.toggle('active', isRepeat);
   });
+
+  if (btnDownload) {
+    btnDownload.addEventListener('click', () => {
+      const list = getFilteredTracks();
+      const currentTrack = list[currentIndex];
+      if (!currentTrack) {
+        showDownloadToast('No audio track selected to download');
+        return;
+      }
+      btnDownload.classList.add('downloading');
+      if (downloadIcon) downloadIcon.setAttribute('name', 'cloud-download-outline');
+      downloadTrack(currentTrack);
+      setTimeout(() => {
+        btnDownload.classList.remove('downloading');
+        if (downloadIcon) downloadIcon.setAttribute('name', 'download-outline');
+      }, 1500);
+    });
+  }
 
   btnPlayerFav.addEventListener('click', () => {
     const list = getFilteredTracks();

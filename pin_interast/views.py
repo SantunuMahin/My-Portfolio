@@ -1,6 +1,6 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, Http404
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth import authenticate, login as auth_login
 from .models import PinBoard, Pin, PinAudioTrack
@@ -343,4 +343,23 @@ def api_delete_music_track(request, track_id):
         'message': f"Deleted '{title}' from library.",
         'favorite_count': PinAudioTrack.objects.filter(is_favorite=True).count()
     })
+
+
+def download_audio_track(request, track_id):
+    """Serve or proxy audio file as an attachment download with proper headers."""
+    track = get_object_or_404(PinAudioTrack, pk=track_id)
+    safe_title = "".join(c for c in f"{track.artist} - {track.title}" if c.isalnum() or c in " ._-").strip() or "track"
+    filename = f"{safe_title}.mp3"
+
+    if track.audio_file:
+        try:
+            return FileResponse(track.audio_file.open('rb'), as_attachment=True, filename=filename)
+        except Exception:
+            pass
+
+    if track.audio_url:
+        return redirect(track.audio_url)
+
+    raise Http404("Audio track file not found for download.")
+
 

@@ -3,6 +3,7 @@
 
 {% block title %}{{ book.title }} — Books{% endblock %}
 {% block meta_desc %}{{ book.key_takeaway|default:book.title }}{% endblock %}
+{% block body_class %}page-subpage page-book-detail{% endblock %}
 
 {% block content %}
 <div class="blog-main books-main">

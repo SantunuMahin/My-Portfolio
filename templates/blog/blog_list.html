@@ -3,6 +3,7 @@
 
 {% block title %}Blog — {{ profile.name|default:"Portfolio" }}{% endblock %}
 {% block meta_desc %}Thoughts, tutorials and explorations in tech from {{ profile.name|default:"a developer" }}.{% endblock %}
+{% block body_class %}page-subpage page-blog{% endblock %}
 
 {% block content %}
 <div class="blog-main">

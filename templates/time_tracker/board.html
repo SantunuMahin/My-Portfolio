@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Task Planner — {{ profile.name|default:"Portfolio" }}{% endblock %}
+{% block body_class %}page-subpage page-tracker{% endblock %}
+
 {% block content %}
 <div class="tracker-main">
 

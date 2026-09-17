@@ -12,6 +12,7 @@ urlpatterns = [
     path('music/api/add/', views.api_add_music_track, name='api_add_music_track'),
     path('music/api/<int:track_id>/favorite/', views.api_toggle_favorite, name='api_toggle_favorite'),
     path('music/api/<int:track_id>/delete/', views.api_delete_music_track, name='api_delete_music_track'),
+    path('music/<int:track_id>/download/', views.download_audio_track, name='download_audio_track'),
     path('<slug:slug>/', views.board_detail, name='board_detail'),
     path('<slug:board_slug>/<int:pk>/', views.pin_detail, name='pin_detail'),
 ]

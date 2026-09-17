@@ -11,6 +11,8 @@ urlpatterns = [
     path('blog/', include('blog.urls')),
     path('books/', include('books.urls')),
     path('tasks/', include('time_tracker.urls')),
+    path('time-tracker/', RedirectView.as_view(url='/tasks/', permanent=False)),
+    path('time-tracker/<path:extra>', RedirectView.as_view(url='/tasks/%(extra)s', permanent=False)),
     path('pins/', include('pin_interast.urls')),
     path('pin-interast/', RedirectView.as_view(url='/pins/', permanent=False)),
     path('pin-interast/<path:extra>', RedirectView.as_view(url='/pins/%(extra)s', permanent=False)),
