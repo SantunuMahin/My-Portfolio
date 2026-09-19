@@ -706,6 +706,33 @@ select {
   }
 }
 
+/* Mobile blob optimization: smaller, lighter blur, slower animation */
+@media (max-width: 768px) {
+  .blob {
+    filter: blur(40px);
+    will-change: auto;
+  }
+
+  .blob-1 {
+    width: 280px;
+    height: 280px;
+    animation-duration: 24s;
+  }
+
+  .blob-2 {
+    width: 220px;
+    height: 220px;
+    animation-duration: 30s;
+  }
+
+  .blob-3 {
+    width: 180px;
+    height: 180px;
+    animation-duration: 34s;
+  }
+}
+
+
 /* ----------------------------------------------------------------
    6. THEME TOGGLE BUTTON
    ---------------------------------------------------------------- */
@@ -781,6 +808,25 @@ main {
   padding: 0 16px 80px;
   align-items: start;
 }
+
+/* Mobile: single-column layout below 1024px */
+@media (max-width: 1024px) {
+  main {
+    grid-template-columns: 1fr;
+    margin-top: calc(64px + 12px) !important;
+    margin-bottom: 0;
+    padding: 0 16px calc(60px + env(safe-area-inset-bottom, 0px));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  main {
+    padding: 0 12px calc(60px + env(safe-area-inset-bottom, 0px));
+    gap: 12px;
+  }
+}
+
 
 /* ----------------------------------------------------------------
    8. GLASS CARD MIXIN (utility)
@@ -1127,7 +1173,10 @@ address {
   font-weight: 600;
   transition: var(--transition);
   box-shadow: 0 2px 12px var(--accent-glow);
+  touch-action: manipulation;
+  min-height: 36px;
 }
+
 
 .cv-download-btn:hover {
   transform: translateY(-2px);
@@ -1154,7 +1203,9 @@ address {
   font-size: 20px;
   transition: var(--transition);
   background: var(--bg-overlay);
+  touch-action: manipulation;
 }
+
 
 .social-link:hover {
   color: #fff;
@@ -1815,6 +1866,27 @@ article.active {
   margin-bottom: 24px;
 }
 
+/* Mobile: horizontal scroll strip instead of wrapping */
+@media (max-width: 480px) {
+  .filter-list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+    /* hide scrollbar visually but keep it functional */
+    scrollbar-width: none;
+  }
+
+  .filter-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-item {
+    scroll-snap-align: start;
+  }
+}
+
 .filter-btn {
   padding: 7px 18px;
   border-radius: var(--radius-full);
@@ -1825,12 +1897,17 @@ article.active {
   background: var(--bg-overlay);
   transition: var(--transition-fast);
   backdrop-filter: blur(8px);
+  touch-action: manipulation;
+  min-height: 36px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .filter-btn:hover {
   color: var(--text-primary);
   border-color: var(--accent);
 }
+
 
 .filter-btn.active {
   background: var(--gradient-accent);
@@ -1976,15 +2053,19 @@ article.active {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: 18px;
   transition: var(--transition-fast);
   background: var(--bg-overlay);
+  touch-action: manipulation;
 }
+
 
 .project-link-btn:hover {
   color: #fff;
@@ -5540,6 +5621,7 @@ div.pin-main {
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+
 .info-more-btn.open ion-icon {
   transform: rotate(180deg);
 }
@@ -6624,6 +6706,7 @@ body.mobile-menu-open {
   backdrop-filter: blur(2px);
 }
 
+
 .pin-card-title {
   color: #fff;
   font-family: var(--font-heading);
@@ -7135,18 +7218,20 @@ body.mobile-menu-open {
 
 @media (max-width: 500px) {
   .sidebar {
-    padding: 20px 16px;
+    padding: 18px 14px;
   }
 
+  /* Circular avatar — smaller on very narrow screens */
   .avatar-box,
   .avatar-box img,
   .avatar-placeholder {
-    width: 160px;
-    height: 160px;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
   }
 
   .name {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
   }
 
   .service-list {
@@ -7161,6 +7246,43 @@ body.mobile-menu-open {
     gap: 10px;
   }
 }
+
+/* Very small phones: tighter contact form padding */
+@media (max-width: 400px) {
+  .contact-form-col {
+    padding: 16px 12px;
+  }
+}
+
+/* Body scroll lock when mobile drawer is open (critical for iOS) */
+body.mobile-menu-open {
+  overflow: hidden;
+  /* overscroll-behavior prevents momentum scroll bleed on iOS */
+  overscroll-behavior: none;
+}
+
+
+/* ----------------------------------------------------------------
+   Reading progress bar — slim on mobile
+   ---------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .reading-progress-bar {
+    height: 2px;
+  }
+}
+
+/* ----------------------------------------------------------------
+   Sidebar on mobile: compact, not sticky
+   ---------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    top: auto;
+  }
+}
+
+
 
 /* ================================================================
    SMOOTH SCROLL (LENIS) & TAB TRANSITIONS
@@ -7223,9 +7345,10 @@ article.tab-fade-out {
 
 .quick-links-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(140px, 45vw), 1fr));
   gap: 12px;
 }
+
 
 .quick-link-card {
   display: flex;
@@ -7659,4 +7782,311 @@ article.tab-fade-out {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
+}
+
+
+/* ================================================================
+   COMPREHENSIVE MOBILE UI/UX POLISH
+   ================================================================ */
+
+/* --- 1. Global overflow protection --- */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* --- 2. Name & title overflow protection (fixes truncation in screenshots) --- */
+.name {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.title-badge {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* --- 3. Sidebar info: HORIZONTAL layout on medium mobile (480px–1024px) --- */
+/*
+  Before: stacked column (large avatar + name below) — wastes vertical space
+  After:  row layout (compact circular avatar left, info right) — cleaner on mobile
+*/
+@media (min-width: 480px) and (max-width: 1024px) {
+  .sidebar-info {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    padding: 0;
+  }
+
+  /* Compact avatar for horizontal layout */
+  .avatar-box {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .avatar-box img,
+  .avatar-placeholder {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .avatar-box .status-dot {
+    bottom: 4px;
+    right: 4px;
+    width: 13px;
+    height: 13px;
+  }
+
+  /* Info content: left-aligned, allows text to wrap properly */
+  .info-content {
+    align-items: flex-start;
+    text-align: left;
+    flex: 1;
+    min-width: 0; /* critical: lets flex child shrink and wrap text */
+  }
+
+  .name {
+    text-align: left;
+  }
+
+  .title-badge {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  .sidebar-contacts-toggle {
+    display: flex !important;
+    width: -webkit-fit-content !important;
+    width: -moz-fit-content !important;
+    width: fit-content !important;
+    margin: 14px auto 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-self: center !important;
+  }
+
+}
+
+/* --- 4. Hover transforms: disable on touch devices (no sticky hover) --- */
+@media (hover: none) {
+  /* translateX is the worst offender — causes horizontal overflow on mobile */
+  .contact-link-item:hover {
+    transform: none !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+
+  /* translateY lifts are unnecessary without a cursor */
+  .service-item:hover,
+  .skill-category-card:hover,
+  .project-card:hover,
+  .blog-card:hover,
+  .quick-link-card:hover,
+  .social-link:hover,
+  .cv-btn:hover,
+  .cv-download-btn:hover,
+  .back-btn:hover,
+  .sidebar-back-btn:hover,
+  .pomo-btn:hover,
+  .filter-btn:hover,
+  .hs-sug-chip:hover,
+  .hs-quick-link-btn:hover,
+  .search-item:hover {
+    transform: none !important;
+  }
+
+  /* Active press feedback instead of hover */
+  .project-card:active,
+  .blog-card:active,
+  .service-item:active,
+  .quick-link-card:active,
+  .contact-link-item:active {
+    opacity: 0.82;
+    transition: opacity 0.1s ease;
+  }
+}
+
+/* Also remove translateX contact hover on all mobile (can't rely on hover:none alone) */
+@media (max-width: 1024px) {
+  .contact-link-item:hover {
+    transform: none;
+  }
+}
+
+/* --- 5. Skills grid: 2 columns on medium mobile --- */
+@media (min-width: 480px) and (max-width: 768px) {
+  .skills-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --- 6. Blog detail layout: collapse on mobile --- */
+@media (max-width: 768px) {
+  .blog-detail-layout {
+    grid-template-columns: 1fr;
+    padding: 0 12px 40px;
+  }
+
+  .blog-related {
+    position: static;
+  }
+
+  .blog-post-header {
+    padding: 20px 18px 0;
+  }
+
+  .blog-post-content {
+    padding: 20px 18px 28px;
+  }
+
+  .blog-post-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* --- 7. Article title: compact on phones --- */
+@media (max-width: 480px) {
+  .article-title {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+  }
+
+  /* Shorter underline accent */
+  .article-title::after {
+    width: 50px;
+  }
+}
+
+/* --- 8. Contact items: better padding on mobile --- */
+@media (max-width: 600px) {
+  .contact-link-item {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .contact-icon-box {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 18px;
+  }
+
+  .contact-val {
+    font-size: 0.82rem;
+    word-break: break-all;
+  }
+
+  .cv-btn {
+    padding: 12px 24px;
+    font-size: 0.88rem;
+  }
+}
+
+/* --- 9. Service items: always single column on mobile --- */
+@media (max-width: 600px) {
+  .service-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- 10. Blog header: compact on narrow phones --- */
+@media (max-width: 480px) {
+  .blog-header {
+    padding: 22px 16px;
+  }
+
+  .blog-page-title {
+    font-size: 1.6rem;
+  }
+}
+
+/* --- 11. Project image: shorter height on small screens --- */
+@media (max-width: 480px) {
+  .project-img,
+  .project-img-placeholder {
+    height: 160px;
+  }
+}
+
+/* --- 12. Back button: smaller touch target on mobile --- */
+@media (max-width: 480px) {
+  .back-btn {
+    font-size: 0.76rem;
+    padding: 5px 12px;
+  }
+}
+
+/* --- 13. Pomodoro timer: compact on mobile --- */
+@media (max-width: 600px) {
+  .tracker-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pomodoro-card {
+    position: static;
+  }
+
+  .pomodoro-clock {
+    width: 170px;
+    height: 170px;
+  }
+
+  .timer-ring {
+    width: 170px;
+    height: 170px;
+  }
+
+  .timer-display {
+    font-size: 2.2rem;
+  }
+}
+
+/* --- 14. Sidebar separator compact on mobile --- */
+@media (max-width: 1024px) {
+  .separator {
+    margin: 16px 0;
+  }
+}
+
+/* --- 15. Form row: always single column on mobile --- */
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- 16. Smooth tap highlight removal for cleaner mobile UX --- */
+a, button, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+/* --- 17. Section padding: tighter on small phones --- */
+@media (max-width: 480px) {
+  .section {
+    margin-bottom: 28px;
+  }
+
+  .skills-section {
+    margin-bottom: 28px;
+  }
+}
+
+/* --- 18. Pin/board card grid: 1 column on very small screens --- */
+@media (max-width: 400px) {
+  .pin-boards-grid {
+    grid-template-columns: 1fr;
+  }
 }

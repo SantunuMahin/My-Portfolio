@@ -263,7 +263,8 @@ function initPortfolio() {
       }
     });
 
-    if (mobileDrawer && !mobileDrawer.dataset.hasSwipeListener) {
+    // Only attach swipe-to-close on touch devices / mobile viewports
+    if (mobileDrawer && !mobileDrawer.dataset.hasSwipeListener && window.matchMedia('(max-width: 1024px)').matches) {
       let startX = 0;
       let startY = 0;
       mobileDrawer.addEventListener('touchstart', (e) => {
@@ -283,6 +284,7 @@ function initPortfolio() {
       }, { passive: true });
       mobileDrawer.dataset.hasSwipeListener = 'true';
     }
+
 
     if (!document.hasOutsideClickListener) {
       document.addEventListener('click', (e) => {
@@ -340,6 +342,8 @@ function setupScrollReveal() {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('revealed');
+        // Disconnect once revealed — saves memory on long pages
+        observer.unobserve(entry.target);
       }
     });
   }, { threshold: 0.12 });
@@ -352,6 +356,7 @@ function setupScrollReveal() {
     setTimeout(() => card.classList.add('reveal'), 50 * i);
   });
 }
+
 
 /* ---- Reading Progress Bar ---- */
 function setupReadingProgress() {
@@ -466,14 +471,24 @@ function executePageScripts(doc) {
   });
 }
 
+// Active AbortController: cancels stale in-flight PJAX fetches on rapid navigation
+let _pjaxAbortController = null;
+
 async function navigateTo(url, pushToHistory = true) {
   const viewport = document.getElementById('spa-content-viewport');
   if (!viewport) return;
 
+  // Abort any previous in-flight navigation request (race condition fix)
+  if (_pjaxAbortController) {
+    _pjaxAbortController.abort();
+  }
+  _pjaxAbortController = new AbortController();
+  const { signal } = _pjaxAbortController;
+
   viewport.classList.add('pjax-fade-out');
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { signal });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const htmlText = await response.text();
 
@@ -514,10 +529,17 @@ async function navigateTo(url, pushToHistory = true) {
     initPortfolio();
 
   } catch (error) {
+    if (error.name === 'AbortError') {
+      // Navigation superseded by a newer click — silently ignore
+      return;
+    }
     console.error('PJAX navigation error, falling back to full navigation:', error);
     window.location.href = url;
+  } finally {
+    _pjaxAbortController = null;
   }
 }
+
 
 // Intercept clicks on links for PJAX routing
 document.addEventListener('click', e => {
@@ -553,19 +575,25 @@ window.addEventListener('popstate', e => {
 });
 
 // Reposition sliding active indicator and auto-close drawer on resize
+// Debounced to prevent layout thrashing on every resize pixel
+let _resizeTimer = null;
 window.addEventListener('resize', () => {
-  if (window.innerWidth > 1024) {
-    document.querySelector('.navbar')?.classList.remove('open');
-    document.getElementById('mobileMenuDrawer')?.classList.remove('open');
-    document.getElementById('mobileMenuDrawer')?.setAttribute('aria-hidden', 'true');
-    const hBtn = document.getElementById('hamburgerBtn');
-    hBtn?.classList.remove('open');
-    hBtn?.setAttribute('aria-expanded', 'false');
-    document.getElementById('mobileNavBackdrop')?.classList.remove('active');
-    document.body.classList.remove('mobile-menu-open');
-  }
-  moveNavbarIndicator();
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    if (window.innerWidth > 1024) {
+      document.querySelector('.navbar')?.classList.remove('open');
+      document.getElementById('mobileMenuDrawer')?.classList.remove('open');
+      document.getElementById('mobileMenuDrawer')?.setAttribute('aria-hidden', 'true');
+      const hBtn = document.getElementById('hamburgerBtn');
+      hBtn?.classList.remove('open');
+      hBtn?.setAttribute('aria-expanded', 'false');
+      document.getElementById('mobileNavBackdrop')?.classList.remove('active');
+      document.body.classList.remove('mobile-menu-open');
+    }
+    moveNavbarIndicator();
+  }, 150);
 });
+
 
 // Setup on initial load
 if (document.readyState === 'loading') {
